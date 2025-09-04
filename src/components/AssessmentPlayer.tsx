@@ -34,7 +34,6 @@ export default function AssessmentPlayer({
 
     const initializeAssessment = async () => {
       if (isInitialized) {
-        console.log("Assessment already initialized, skipping...");
         return;
       }
 
@@ -47,11 +46,6 @@ export default function AssessmentPlayer({
           testSessionId: sessionId,
           studentId,
         };
-
-        console.log(
-          "AssessmentPlayer - Sending request to /api/learnosity with body:",
-          requestBody
-        );
 
         const response = await fetch("/api/learnosity", {
           method: "POST",
@@ -80,11 +74,6 @@ export default function AssessmentPlayer({
         }
 
         const learnosityConfig = data.data.learnosity;
-        console.log("Learnosity config received:", learnosityConfig);
-        console.log(
-          "Activity ID being used:",
-          learnosityConfig.itemsRequest.activity_id
-        );
         setLearnosityConfig(learnosityConfig);
 
         // Load Learnosity Items API script if not already loaded
@@ -95,13 +84,9 @@ export default function AssessmentPlayer({
         // Wait for the container to be available before initializing
         const waitForContainer = () => {
           if (containerRef.current && !isInitialized) {
-            console.log(
-              "Container is now available, initializing Items API..."
-            );
             isInitialized = true;
             initializeItemsAPI(learnosityConfig.itemsRequest);
           } else if (!isInitialized) {
-            console.log("Container not yet available, retrying in 100ms...");
             setTimeout(waitForContainer, 100);
           }
         };
@@ -130,18 +115,14 @@ export default function AssessmentPlayer({
   const loadLearnosityScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (window.LearnosityItems) {
-        console.log("LearnosityItems already available");
         resolve();
         return;
       }
 
-      console.log("Loading Learnosity script...");
       const script = document.createElement("script");
       script.src = "//items-ie.learnosity.com/?latest-lts";
       script.async = true;
       script.onload = () => {
-        console.log("Learnosity script loaded successfully");
-        console.log("window.LearnosityItems:", window.LearnosityItems);
         resolve();
       };
       script.onerror = () => {
@@ -156,13 +137,9 @@ export default function AssessmentPlayer({
   const initializeItemsAPI = (config: any) => {
     // Prevent duplicate initialization
     if (itemsAppRef.current) {
-      console.log("Items API already initialized, skipping...");
       return;
     }
 
-    console.log("initializeItemsAPI called with config:", config);
-    console.log("containerRef.current:", containerRef.current);
-    console.log("window.LearnosityItems:", window.LearnosityItems);
 
     if (!containerRef.current || !window.LearnosityItems) {
       console.error("Missing container or LearnosityItems:", {
@@ -173,23 +150,7 @@ export default function AssessmentPlayer({
     }
 
     try {
-      console.log("About to initialize Learnosity Items API...");
-
-      console.log("Learnosity config being passed:", config);
-
       // Initialize the Items API
-      console.log(
-        "Calling LearnosityItems.init with config:",
-        JSON.stringify(config, null, 2)
-      );
-      console.log(
-        "Available LearnosityItems methods:",
-        Object.getOwnPropertyNames(window.LearnosityItems)
-      );
-      console.log(
-        "LearnosityItems.init function:",
-        typeof window.LearnosityItems.init
-      );
 
       // Verify required configuration structure
       if (!config.security || !config.request) {
@@ -209,8 +170,6 @@ export default function AssessmentPlayer({
           "Missing required security fields:",
           missingSecurityFields
         );
-      } else {
-        console.log("All required security fields are present");
       }
 
       // Verify required request fields
@@ -220,16 +179,12 @@ export default function AssessmentPlayer({
       );
       if (missingRequestFields.length > 0) {
         console.error("Missing required request fields:", missingRequestFields);
-      } else {
-        console.log("All required request fields are present");
       }
 
       // Try the standard initialization first
       try {
         itemsAppRef.current = window.LearnosityItems.init(config, {
           readyListener: () => {
-            console.log("Learnosity Items API ready");
-            console.log("Assessment should now be visible");
             setIsLoading(false);
           },
           errorListener: (error: any) => {
@@ -239,7 +194,6 @@ export default function AssessmentPlayer({
             onError?.("Assessment loading error");
           },
           submitSuccess: (response: any) => {
-            console.log("Assessment submitted successfully:", response);
             onComplete?.(response);
           },
           submitError: (error: any) => {
@@ -249,22 +203,17 @@ export default function AssessmentPlayer({
           },
         });
 
-        console.log("Standard init successful:", itemsAppRef.current);
       } catch (initError) {
         console.error("Standard init failed:", initError);
 
         // Try alternative initialization method
         try {
-          console.log("Trying alternative initialization method...");
           itemsAppRef.current = window.LearnosityItems.init(config);
-          console.log("Alternative init successful:", itemsAppRef.current);
         } catch (altInitError) {
           console.error("Alternative init also failed:", altInitError);
           throw altInitError;
         }
       }
-
-      console.log("Learnosity Items API initialized:", itemsAppRef.current);
 
       // Check if there are any Learnosity errors
       if (
