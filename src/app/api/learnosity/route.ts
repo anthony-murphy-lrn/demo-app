@@ -14,7 +14,6 @@ import {
   handleValidationErrors,
   handleNotFoundError,
   handleGenericError,
-  handleLearnosityError,
 } from "@/utils/error-handler";
 
 // POST /api/learnosity - Initialize Learnosity session
@@ -131,58 +130,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/learnosity/security - Get security configuration for media assets
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get("sessionId");
-
-    if (!sessionId) {
-      return createErrorResponse(
-        "Session ID is required",
-        STATUS_CODES.BAD_REQUEST,
-        undefined,
-        "MISSING_SESSION_ID"
-      );
-    }
-
-    // Validate session ID format
-    const idValidation = validateIdFormat(sessionId);
-    const idValidationError = handleValidationErrors(idValidation);
-    if (idValidationError) return idValidationError;
-
-    // Check if Learnosity is configured
-    if (!learnosityService.isConfigured()) {
-      return createErrorResponse(
-        "Learnosity is not properly configured",
-        STATUS_CODES.INTERNAL_SERVER_ERROR,
-        undefined,
-        "LEARNOSITY_CONFIG_ERROR"
-      );
-    }
-
-    // Retrieve session from database
-    const session = await prisma.testSession.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      return handleNotFoundError("Test Session");
-    }
-
-    try {
-      // Generate security configuration
-      const securityConfig = learnosityService.generateSecurityConfig(
-        session.learnositySessionId
-      );
-
-      return createSuccessResponse({
-        security: securityConfig,
-      });
-    } catch (learnosityError) {
-      return handleLearnosityError(learnosityError);
-    }
-  } catch (error) {
-    return handleGenericError(error, "Learnosity Security Configuration");
-  }
-}
