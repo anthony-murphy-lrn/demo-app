@@ -20,25 +20,14 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log("Learnosity API - Received request body:", body);
 
     // Validate request body
     const bodyValidation = validateRequestBody(body, [
       "testSessionId",
       "studentId",
     ]);
-    console.log("Learnosity API - Body validation result:", bodyValidation);
-    console.log(
-      "Learnosity API - Request body received:",
-      JSON.stringify(body, null, 2)
-    );
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) {
-      console.log("Learnosity API - Validation error:", validationError);
-      console.log(
-        "Learnosity API - Validation error details:",
-        JSON.stringify(validationError, null, 2)
-      );
       return validationError;
     }
 
@@ -63,17 +52,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve test session from database
-    console.log(
-      "Learnosity API - Looking for test session with ID:",
-      body.testSessionId
-    );
     const testSession = await prisma.testSession.findUnique({
       where: { id: body.testSessionId },
     });
-    console.log("Learnosity API - Found test session:", testSession);
 
     if (!testSession) {
-      console.log("Learnosity API - Test session not found");
       return handleNotFoundError("Test Session");
     }
 
