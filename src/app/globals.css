@@ -1,26 +1,266 @@
-@import "tailwindcss";
+/* Bootstrap CSS is imported in layout.tsx */
 
+/* Custom styles for the assessment delivery demo */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-geist-sans:
+    "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  --font-geist-mono:
+    "Geist Mono", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
+    "Source Code Pro", "Droid Sans Mono", "Courier New", monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-geist-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Assessment container overflow control - STRONG CONTAINMENT */
+.assessment-container {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  padding: 0 20px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: translateX(0) !important;
+  transform-origin: left top !important;
+}
+
+/* Force horizontal scrollbar if content is too wide */
+.assessment-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.assessment-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.assessment-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.assessment-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ensure Learnosity elements don't overflow - STRONGER RULES */
+#learnosity_assess {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  padding: 0 20px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: translateX(0) !important;
+  transform-origin: left top !important;
+}
+
+#learnosity_assess * {
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* Handle Learnosity specific elements that might cause overflow - STRONGER RULES */
+.lrn,
+.lrn-assessment,
+.lrn-items-app {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  background-color: white !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: translateX(0) !important;
+  transform-origin: left top !important;
+}
+
+.lrn *,
+.lrn-assessment *,
+.lrn-items-app * {
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-x: hidden !important;
+}
+
+/* Ensure buttons and interactive elements are visible */
+.lrn-btn,
+.lrn-button,
+.lrn-submit,
+.lrn-next,
+.lrn-previous,
+.lrn-save {
+  max-width: 100vw !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Handle Learnosity iframes and embedded content */
+.lrn iframe,
+.lrn-assessment iframe,
+.lrn-items-app iframe,
+#learnosity_assess iframe {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: auto !important;
+  min-height: 400px !important;
+  overflow-x: hidden !important;
+}
+
+/* Force all Learnosity content to respect viewport boundaries */
+.lrn-assessment,
+.lrn-items-app,
+#learnosity_assess {
+  contain: layout style paint !important;
+  isolation: isolate !important;
+}
+
+/* Assessment page styling */
+.assessment-page {
+  background-color: white !important;
+  min-height: 100vh !important;
+}
+
+/* More conservative approach - only target the main container */
+.assessment-container {
+  padding: 0 20px !important;
+  background-color: white !important;
+  min-height: 100vh !important;
+}
+
+/* Ensure the Learnosity container respects the padding */
+#learnosity_assess {
+  padding: 0 20px !important;
+  background-color: white !important;
+}
+
+/* Fix grey elements in Learnosity assessment player */
+.lrn .lrn-header,
+.lrn .lrn-toolbar,
+.lrn .lrn-progress,
+.lrn .lrn-timer,
+.lrn .lrn-controls,
+.lrn .lrn-ui-header,
+.lrn .lrn-assessment-header,
+.lrn .lrn-items-header {
+  background-color: white !important;
+  background: white !important;
+}
+
+/* Fix grey separators and dividers */
+.lrn .lrn-separator,
+.lrn .lrn-divider,
+.lrn .lrn-border,
+.lrn .lrn-line {
+  background-color: #e0e0e0 !important;
+  border-color: #e0e0e0 !important;
+}
+
+/* Fix grey buttons and controls */
+.lrn .lrn-btn,
+.lrn .lrn-button,
+.lrn .lrn-control,
+.lrn .lrn-pause-btn,
+.lrn .lrn-play-btn {
+  background-color: white !important;
+  border-color: #d0d0d0 !important;
+  color: #333 !important;
+}
+
+/* Fix grey progress indicators */
+.lrn .lrn-progress-bar,
+.lrn .lrn-progress-indicator {
+  background-color: #f0f0f0 !important;
+}
+
+/* Target specific Learnosity UI elements for white background */
+.lrn .lrn-ui,
+.lrn .lrn-interface,
+.lrn .lrn-panel {
+  background-color: white !important;
+}
+
+/* Override specific grey elements */
+.lrn [style*="background-color: grey"],
+.lrn [style*="background-color: gray"],
+.lrn [style*="background: grey"],
+.lrn [style*="background: gray"] {
+  background-color: white !important;
+  background: white !important;
+}
+
+/* Target the specific header/toolbar area */
+.lrn .lrn-assess-header,
+.lrn .lrn-items-header,
+.lrn .lrn-top-bar,
+.lrn .lrn-status-bar {
+  background-color: white !important;
+  background: white !important;
+}
+
+/* Fix any grey backgrounds in the main assessment area */
+.lrn .lrn-main,
+.lrn .lrn-content,
+.lrn .lrn-question-area {
+  background-color: white !important;
+  background: white !important;
+}
+
+/* Ensure responsive behavior for all Learnosity content */
+@media (max-width: 768px) {
+  .assessment-container {
+    padding: 0 15px !important;
+  }
+  
+  #learnosity_assess,
+  #learnosity_assess * {
+    font-size: 14px !important;
+  }
+  
+  .lrn-btn,
+  .lrn-button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
