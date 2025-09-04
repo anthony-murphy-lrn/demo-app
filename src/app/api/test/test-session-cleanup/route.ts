@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import SessionCleanupService from "../../../../lib/session-cleanup";
-import SessionService from "../../../../lib/session-service";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -84,7 +82,7 @@ export async function POST(request: NextRequest) {
 
       case "createExpiredSession":
         // Create a test session that will be expired
-        const expiredSession = await SessionService.createSession({
+        const expiredSession = await TestSessionService.createSession({
           studentId: `expired-test-${Date.now()}`,
           learnositySessionId: `expired-learnosity-${Date.now()}`,
           assessmentId: "expired-assessment",
@@ -99,7 +97,7 @@ export async function POST(request: NextRequest) {
 
       case "createAbandonedSession":
         // Create a test session that will be considered abandoned
-        const abandonedSession = await SessionService.createSession({
+        const abandonedSession = await TestSessionService.createSession({
           studentId: `abandoned-test-${Date.now()}`,
           learnositySessionId: `abandoned-learnosity-${Date.now()}`,
           assessmentId: "abandoned-assessment",
@@ -107,7 +105,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Manually set the updatedAt to simulate abandonment
-        await SessionService.updateProgress(abandonedSession.id, 1, 20);
+        await TestSessionService.updateProgress(abandonedSession.id, 1, 20);
 
         return NextResponse.json({
           status: "success",

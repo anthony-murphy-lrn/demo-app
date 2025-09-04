@@ -1,19 +1,19 @@
 import { prisma } from "./database";
-import { SessionModel, AssessmentResultModel } from "./models";
-import SessionService from "./session-service";
-import {} from "../utils/session-id-generator";
+import { AssessmentResultModel } from "./models";
+import { TestSessionService } from "./test-session-service";
+import {} from "../utils/test-session-id-generator";
 
 export interface SeederConfig {
-  sessionsCount: number;
-  includeExpiredSessions: boolean;
-  includeCompletedSessions: boolean;
-  includeAbandonedSessions: boolean;
-  assessmentResultsPerSession: number;
+  testSessionsCount: number;
+  includeExpiredTestSessions: boolean;
+  includeCompletedTestSessions: boolean;
+  includeAbandonedTestSessions: boolean;
+  assessmentResultsPerTestSession: number;
   questionsPerAssessment: number;
 }
 
 export interface SeederResult {
-  sessionsCreated: number;
+  testSessionsCreated: number;
   resultsCreated: number;
   totalRecords: number;
   executionTime: number;
@@ -22,11 +22,11 @@ export interface SeederResult {
 
 export class DatabaseSeeder {
   private static readonly DEFAULT_CONFIG: SeederConfig = {
-    sessionsCount: 10,
-    includeExpiredSessions: true,
-    includeCompletedSessions: true,
-    includeAbandonedSessions: true,
-    assessmentResultsPerSession: 5,
+    testSessionsCount: 10,
+    includeExpiredTestSessions: true,
+    includeCompletedTestSessions: true,
+    includeAbandonedTestSessions: true,
+    assessmentResultsPerTestSession: 5,
     questionsPerAssessment: 10,
   };
 
@@ -47,25 +47,25 @@ export class DatabaseSeeder {
       // Clear existing demo data first
       await this.clearDemoData();
 
-      // Create demo sessions
-      const sessions = await this.createDemoSessions(finalConfig);
+      // Create demo test sessions
+      const testSessions = await this.createDemoTestSessions(finalConfig);
 
       // Create demo assessment results
-      const results = await this.createDemoResults(sessions, finalConfig);
+      const results = await this.createDemoResults(testSessions, finalConfig);
 
-      // Create various session states
-      await this.createSessionVarieties(sessions, finalConfig);
+      // Create various test session states
+      await this.createSessionVarieties(testSessions, finalConfig);
 
       const executionTime = Date.now() - startTime;
-      const totalRecords = sessions.length + results.length;
+      const totalRecords = testSessions.length + results.length;
 
       console.log(`✅ Database seeding completed in ${executionTime}ms`);
       console.log(
-        `📈 Created ${sessions.length} sessions and ${results.length} results`
+        `📈 Created ${testSessions.length} test sessions and ${results.length} results`
       );
 
       return {
-        sessionsCreated: sessions.length,
+        testSessionsCreated: testSessions.length,
         resultsCreated: results.length,
         totalRecords,
         executionTime,
@@ -90,8 +90,8 @@ export class DatabaseSeeder {
       // Delete all assessment results first
       await prisma.assessmentResult.deleteMany();
 
-      // Delete all sessions
-      await prisma.session.deleteMany();
+      // Delete all test sessions
+      await prisma.testSession.deleteMany();
 
       console.log("✅ Demo data cleared successfully");
     } catch (error) {
@@ -101,14 +101,15 @@ export class DatabaseSeeder {
   }
 
   /**
-   * Create demo sessions
+   * Create demo test sessions
    */
-  private static async createDemoSessions(
+  private static async createDemoTestSessions(
     config: SeederConfig
   ): Promise<any[]> {
-    console.log("👥 Creating demo sessions...");
+    console.log("👥 Creating demo test sessions...");
+    console.log(`Config testSessionsCount: ${config.testSessionsCount}`);
 
-    const sessions = [];
+    const testSessions = [];
     const studentNames = [
       "Alice Johnson",
       "Bob Smith",
@@ -127,33 +128,34 @@ export class DatabaseSeeder {
       "Olivia Kim",
     ];
 
-    for (let i = 0; i < config.sessionsCount; i++) {
+    for (let i = 0; i < config.testSessionsCount; i++) {
       try {
         const studentName = studentNames[i % studentNames.length];
         const studentId = `demo-student-${i + 1}`;
+        console.log(`Creating test session ${i + 1} for student ${studentId}`);
 
-        const session = await SessionService.createSession({
+        const testSession = await TestSessionService.createTestSession({
           studentId,
           learnositySessionId: `demo-learnosity-${i + 1}`,
           assessmentId: `demo-assessment-${Math.floor(i / 3) + 1}`,
           expiresAt: new Date(Date.now() + (24 + i) * 60 * 60 * 1000), // Varying expiration times
         });
 
-        sessions.push(session);
-        console.log(`✅ Created session for ${studentName} (${studentId})`);
+        testSessions.push(testSession);
+        console.log(`✅ Created test session for ${studentName} (${studentId})`);
       } catch (error) {
-        console.error(`❌ Failed to create session ${i + 1}:`, error);
+        console.error(`❌ Failed to create test session ${i + 1}:`, error);
       }
     }
 
-    return sessions;
+    return testSessions;
   }
 
   /**
    * Create demo assessment results
    */
   private static async createDemoResults(
-    sessions: any[],
+    testSessions: any[],
     config: SeederConfig
   ): Promise<any[]> {
     console.log("📝 Creating demo assessment results...");
@@ -162,9 +164,9 @@ export class DatabaseSeeder {
     const questionTypes = ["multiple-choice", "true-false", "numeric", "text"];
     const difficultyLevels = ["easy", "medium", "hard"];
 
-    for (const session of sessions) {
+    for (const testSession of testSessions) {
       const resultsCount = Math.min(
-        config.assessmentResultsPerSession,
+        config.assessmentResultsPerTestSession,
         config.questionsPerAssessment
       );
 
@@ -179,7 +181,7 @@ export class DatabaseSeeder {
           const timeSpent = Math.floor(Math.random() * 120) + 30; // 30-150 seconds
 
           const result = await AssessmentResultModel.create({
-            sessionId: session.id,
+            testSessionId: testSession.id,
             response: {
               answer,
               questionType,
@@ -203,14 +205,14 @@ export class DatabaseSeeder {
       const progress = Math.round(
         (resultsCount / config.questionsPerAssessment) * 100
       );
-      await SessionService.updateProgress(
-        session.id,
+      await TestSessionService.updateProgress(
+        testSession.id,
         resultsCount + 1,
         progress
       );
 
       console.log(
-        `✅ Created ${resultsCount} results for session ${session.id}`
+        `✅ Created ${resultsCount} results for test session ${testSession.id}`
       );
     }
 
@@ -228,7 +230,7 @@ export class DatabaseSeeder {
 
     if (config.includeExpiredSessions && sessions.length > 0) {
       // Create some expired sessions
-      const expiredSession = await SessionService.createSession({
+      const expiredSession = await TestSessionService.createTestSession({
         studentId: "demo-expired-student",
         learnositySessionId: "demo-expired-learnosity",
         assessmentId: "demo-expired-assessment",
@@ -242,7 +244,7 @@ export class DatabaseSeeder {
 
     if (config.includeCompletedSessions && sessions.length > 0) {
       // Create a completed session
-      const completedSession = await SessionService.createSession({
+      const completedSession = await TestSessionService.createTestSession({
         studentId: "demo-completed-student",
         learnositySessionId: "demo-completed-learnosity",
         assessmentId: "demo-completed-assessment",
@@ -260,13 +262,13 @@ export class DatabaseSeeder {
         });
       }
 
-      await SessionService.completeSession(completedSession.id);
+      await TestSessionService.completeSession(completedSession.id);
       console.log("✅ Created completed session for demonstration");
     }
 
     if (config.includeAbandonedSessions && sessions.length > 0) {
       // Create an abandoned session (no activity for extended period)
-      const abandonedSession = await SessionService.createSession({
+      const abandonedSession = await TestSessionService.createTestSession({
         studentId: "demo-abandoned-student",
         learnositySessionId: "demo-abandoned-learnosity",
         assessmentId: "demo-abandoned-assessment",
@@ -282,7 +284,7 @@ export class DatabaseSeeder {
         timeSpent: 60,
       });
 
-      await SessionService.updateProgress(abandonedSession.id, 2, 14);
+      await TestSessionService.updateProgress(abandonedSession.id, 2, 14);
       console.log("🚫 Created abandoned session for demonstration");
     }
   }
@@ -333,12 +335,12 @@ export class DatabaseSeeder {
   }> {
     try {
       const [sessions, results, databaseSize] = await Promise.all([
-        prisma.session.count(),
+        prisma.testSession.count(),
         prisma.assessmentResult.count(),
         this.getDatabaseSize(),
       ]);
 
-      const statusCounts = await prisma.session.groupBy({
+      const statusCounts = await prisma.testSession.groupBy({
         by: ["status"],
         _count: { status: true },
       });
@@ -400,11 +402,11 @@ export class DatabaseSeeder {
    */
   static async createMinimalDemo(): Promise<SeederResult> {
     return this.seedDatabase({
-      sessionsCount: 3,
-      includeExpiredSessions: false,
-      includeCompletedSessions: false,
-      includeAbandonedSessions: false,
-      assessmentResultsPerSession: 2,
+      testSessionsCount: 3,
+      includeExpiredTestSessions: false,
+      includeCompletedTestSessions: false,
+      includeAbandonedTestSessions: false,
+      assessmentResultsPerTestSession: 2,
       questionsPerAssessment: 5,
     });
   }
@@ -414,11 +416,11 @@ export class DatabaseSeeder {
    */
   static async createComprehensiveDemo(): Promise<SeederResult> {
     return this.seedDatabase({
-      sessionsCount: 20,
-      includeExpiredSessions: true,
-      includeCompletedSessions: true,
-      includeAbandonedSessions: true,
-      assessmentResultsPerSession: 8,
+      testSessionsCount: 20,
+      includeExpiredTestSessions: true,
+      includeCompletedTestSessions: true,
+      includeAbandonedTestSessions: true,
+      assessmentResultsPerTestSession: 8,
       questionsPerAssessment: 15,
     });
   }

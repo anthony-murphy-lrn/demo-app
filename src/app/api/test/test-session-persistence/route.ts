@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import SessionPersistenceService from "../../../../lib/session-persistence";
-import SessionService from "../../../../lib/session-service";
+import TestSessionPersistenceService from "../../../../lib/test-session-persistence";
+import { TestSessionService } from "../../../../lib/test-session-service";
 
 export async function GET(_request: NextRequest) {
   try {
     // Test session persistence service
-    const activeSessions = await SessionService.getActiveSessions();
+    const activeSessions = await TestSessionService.getActiveSessions();
 
     if (activeSessions.length === 0) {
       return NextResponse.json({

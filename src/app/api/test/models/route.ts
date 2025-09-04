@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SessionModel, AssessmentResultModel } from "../../../../lib/models";
+import { AssessmentResultModel } from "../../../../lib/models";
 
 export async function GET(_request: NextRequest) {
   try {

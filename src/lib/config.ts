@@ -24,8 +24,8 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.string().transform(Number).default(3000),
 
-  // Session Configuration
-  SESSION_TIMEOUT_MINUTES: z.string().transform(Number).default(60),
+  // Test Session Configuration
+  TEST_SESSION_TIMEOUT_MINUTES: z.string().transform(Number).default(60),
   CLEANUP_INTERVAL_MINUTES: z.string().transform(Number).default(30),
 
   // Learnosity Configuration
@@ -41,9 +41,9 @@ export const databaseConfig = {
   provider: "sqlite" as const,
 };
 
-// Session configuration
-export const sessionConfig = {
-  timeoutMinutes: config.SESSION_TIMEOUT_MINUTES,
+// Test session configuration
+export const testSessionConfig = {
+  timeoutMinutes: config.TEST_SESSION_TIMEOUT_MINUTES,
   cleanupIntervalMinutes: config.CLEANUP_INTERVAL_MINUTES,
   learnosityExpiresMinutes: config.LEARNOSITY_EXPIRES_MINUTES,
 };

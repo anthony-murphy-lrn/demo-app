@@ -1,6 +1,4 @@
 import { prisma } from "./database";
-import { SessionModel } from "./models";
-import { sessionConfig } from "./config";
 
 export interface CleanupStats {
   expiredSessions: number;
@@ -18,7 +16,7 @@ export interface TimeoutConfig {
   maxAbandonedSessionAgeHours: number;
 }
 
-export class SessionCleanupService {
+export class TestSessionCleanupService {
   private static cleanupInterval: NodeJS.Timeout | null = null;
   private static isRunning = false;
 
@@ -31,7 +29,7 @@ export class SessionCleanupService {
       return;
     }
 
-    const intervalMs = sessionConfig.cleanupIntervalMinutes * 60 * 1000;
+    const intervalMs = testSessionConfig.cleanupIntervalMinutes * 60 * 1000;
 
     this.cleanupInterval = setInterval(async () => {
       if (!this.isRunning) {
@@ -40,7 +38,7 @@ export class SessionCleanupService {
     }, intervalMs);
 
     console.log(
-      `🚀 Session cleanup service initialized (interval: ${sessionConfig.cleanupIntervalMinutes} minutes)`
+      `🚀 Session cleanup service initialized (interval: ${testSessionConfig.cleanupIntervalMinutes} minutes)`
     );
   }
 
@@ -163,7 +161,7 @@ export class SessionCleanupService {
         Date.now() - 24 // hours * 60 * 60 * 1000
       );
 
-      const abandonedSessions = await prisma.session.findMany({
+      const abandonedSessions = await prisma.testSession.findMany({
         where: {
           status: "ACTIVE",
           updatedAt: { lt: abandonedThreshold },
@@ -198,7 +196,7 @@ export class SessionCleanupService {
         Date.now() - 7 // days * 24 * 60 * 60 * 1000
       );
 
-      const oldCompletedSessions = await prisma.session.findMany({
+      const oldCompletedSessions = await prisma.testSession.findMany({
         where: {
           status: "COMPLETED",
           updatedAt: { lt: oldThreshold },
@@ -212,7 +210,7 @@ export class SessionCleanupService {
           where: { sessionId: session.id },
         });
 
-        await prisma.session.delete({
+        await prisma.testSession.delete({
           where: { id: session.id },
         });
 
@@ -291,7 +289,7 @@ export class SessionCleanupService {
       });
 
       // Delete the session
-      await prisma.session.delete({
+      await prisma.testSession.delete({
         where: { id: sessionId },
       });
 
@@ -317,16 +315,16 @@ export class SessionCleanupService {
   }> {
     try {
       const [total, active, expired, completed] = await Promise.all([
-        prisma.session.count(),
-        prisma.session.count({ where: { status: "ACTIVE" } }),
-        prisma.session.count({ where: { status: "EXPIRED" } }),
-        prisma.session.count({ where: { status: "COMPLETED" } }),
+        prisma.testSession.count(),
+        prisma.testSession.count({ where: { status: "ACTIVE" } }),
+        prisma.testSession.count({ where: { status: "EXPIRED" } }),
+        prisma.testSession.count({ where: { status: "COMPLETED" } }),
       ]);
 
       const abandonedThreshold = new Date(
         Date.now() - 24 // hours * 60 * 60 * 1000
       );
-      const abandoned = await prisma.session.count({
+      const abandoned = await prisma.testSession.count({
         where: {
           status: "ACTIVE",
           updatedAt: { lt: abandonedThreshold },
@@ -337,7 +335,7 @@ export class SessionCleanupService {
       const lastCleanup = this.isRunning ? new Date() : null;
       const nextCleanup = this.cleanupInterval
         ? new Date(
-            Date.now() + sessionConfig.cleanupIntervalMinutes * 60 * 1000
+            Date.now() + testSessionConfig.cleanupIntervalMinutes * 60 * 1000
           )
         : null;
 
@@ -394,4 +392,4 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-export default SessionCleanupService;
+export default TestSessionCleanupService;

@@ -1,9 +1,9 @@
 // Application constants for the assessment delivery demo
 
 export const APP_CONSTANTS = {
-  // Session management
-  DEFAULT_SESSION_TIMEOUT: 60, // minutes
-  SESSION_CLEANUP_INTERVAL: 5 * 60 * 1000, // 5 minutes in milliseconds
+  // Test session management
+  DEFAULT_TEST_SESSION_TIMEOUT: 60, // minutes
+  TEST_SESSION_CLEANUP_INTERVAL: 5 * 60 * 1000, // 5 minutes in milliseconds
 
   // Assessment configuration
   DEFAULT_QUESTIONS_PER_PAGE: 1,
@@ -19,13 +19,13 @@ export const APP_CONSTANTS = {
 
   // API endpoints
   API_BASE_PATH: "/api",
-  SESSIONS_ENDPOINT: "/api/sessions",
+  TEST_SESSIONS_ENDPOINT: "/api/test-sessions",
   LEARNOSITY_ENDPOINT: "/api/learnosity",
   RESULTS_ENDPOINT: "/api/results",
 } as const;
 
 export const ERROR_MESSAGES = {
-  SESSION_NOT_FOUND: "Session not found or has expired",
+  TEST_SESSION_NOT_FOUND: "Test session not found or has expired",
   ASSESSMENT_LOAD_ERROR: "Failed to load assessment. Please try again.",
   NETWORK_ERROR: "Network error. Please check your connection.",
   VALIDATION_ERROR: "Please check your input and try again.",
@@ -34,7 +34,7 @@ export const ERROR_MESSAGES = {
 } as const;
 
 export const SUCCESS_MESSAGES = {
-  SESSION_CREATED: "Assessment session created successfully",
+  TEST_SESSION_CREATED: "Assessment test session created successfully",
   PROGRESS_SAVED: "Your progress has been saved",
   ASSESSMENT_COMPLETED: "Assessment completed successfully",
 } as const;

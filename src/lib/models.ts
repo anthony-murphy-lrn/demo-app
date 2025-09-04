@@ -1,37 +1,37 @@
 import { prisma } from "./database";
 import type {
-  Session,
+  TestSession,
   AssessmentResult,
-  SessionStatus,
+  TestSessionStatus,
 } from "../generated/prisma";
 
 // Type definitions for database models
-export type { Session, AssessmentResult, SessionStatus };
+export type { TestSession, AssessmentResult, TestSessionStatus };
 
 // Extended types with additional computed properties
-export interface SessionWithResults extends Session {
+export interface TestSessionWithResults extends TestSession {
   results: AssessmentResult[];
   isExpired: boolean;
   isActive: boolean;
   progressPercentage: number;
 }
 
-export interface AssessmentResultWithSession extends AssessmentResult {
-  session: Session;
+export interface AssessmentResultWithTestSession extends AssessmentResult {
+  testSession: TestSession;
 }
 
-// Session model utilities
-export class SessionModel {
+// Test session model utilities
+export class TestSessionModel {
   /**
-   * Create a new session
+   * Create a new test session
    */
   static async create(data: {
     studentId: string;
     learnositySessionId?: string;
     assessmentId: string;
     expiresAt?: Date;
-  }): Promise<Session> {
-    return prisma.session.create({
+  }): Promise<TestSession> {
+    return prisma.testSession.create({
       data: {
         ...data,
         learnositySessionId:
@@ -45,7 +45,7 @@ export class SessionModel {
    * Find session by ID
    */
   static async findById(id: string): Promise<Session | null> {
-    return prisma.session.findUnique({
+    return prisma.testSession.findUnique({
       where: { id },
     });
   }
@@ -54,7 +54,7 @@ export class SessionModel {
    * Find session by student ID
    */
   static async findByStudentId(studentId: string): Promise<Session | null> {
-    return prisma.session.findFirst({
+    return prisma.testSession.findFirst({
       where: { studentId },
       orderBy: { createdAt: "desc" },
     });
@@ -66,7 +66,7 @@ export class SessionModel {
   static async findByLearnositySessionId(
     learnositySessionId: string
   ): Promise<Session | null> {
-    return prisma.session.findFirst({
+    return prisma.testSession.findFirst({
       where: { learnositySessionId },
     });
   }
@@ -78,7 +78,7 @@ export class SessionModel {
     id: string,
     status: SessionStatus
   ): Promise<Session> {
-    return prisma.session.update({
+    return prisma.testSession.update({
       where: { id },
       data: {
         status,
@@ -91,7 +91,7 @@ export class SessionModel {
    * Mark session as completed
    */
   static async markCompleted(id: string): Promise<Session> {
-    return prisma.session.update({
+    return prisma.testSession.update({
       where: { id },
       data: {
         status: "COMPLETED",
@@ -104,7 +104,7 @@ export class SessionModel {
    * Get session with results
    */
   static async findWithResults(id: string): Promise<SessionWithResults | null> {
-    const session = await prisma.session.findUnique({
+    const session = await prisma.testSession.findUnique({
       where: { id },
       include: {
         results: true,
@@ -128,7 +128,7 @@ export class SessionModel {
    * Get active sessions
    */
   static async findActive(): Promise<Session[]> {
-    return prisma.session.findMany({
+    return prisma.testSession.findMany({
       where: {
         status: "ACTIVE",
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
@@ -140,7 +140,7 @@ export class SessionModel {
    * Get expired sessions
    */
   static async findExpired(): Promise<Session[]> {
-    return prisma.session.findMany({
+    return prisma.testSession.findMany({
       where: {
         OR: [
           { status: "EXPIRED" },

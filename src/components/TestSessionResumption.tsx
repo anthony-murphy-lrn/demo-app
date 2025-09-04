@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Session } from "@/types";
-import SessionStatus from "./SessionStatus";
+import { TestSession } from "@/types";
+import TestSessionStatus from "./TestSessionStatus";
 
-interface SessionResumptionProps {
+interface TestSessionResumptionProps {
   studentId: string;
-  onSessionResume?: (session: Session) => void;
+  onTestSessionResume?: (testSession: TestSession) => void;
 }
 
-export default function SessionResumption({
+export default function TestSessionResumption({
   studentId,
-  onSessionResume,
-}: SessionResumptionProps) {
-  const [existingSession, setExistingSession] = useState<Session | null>(null);
+  onTestSessionResume,
+}: TestSessionResumptionProps) {
+  const [existingTestSession, setExistingTestSession] = useState<TestSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -26,32 +26,32 @@ export default function SessionResumption({
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/sessions?studentId=${studentId}`);
+        const response = await fetch(`/api/test-sessions?studentId=${studentId}`);
 
         if (response.status === 404) {
-          // No existing session found - this is normal, not an error
-          console.log("No existing session found for student:", studentId);
-          setExistingSession(null);
+          // No existing test session found - this is normal, not an error
+          console.log("No existing test session found for student:", studentId);
+          setExistingTestSession(null);
           return;
         }
 
         if (!response.ok) {
-          throw new Error("Failed to check for existing session");
+          throw new Error("Failed to check for existing test session");
         }
 
         const data = await response.json();
-        const session: Session = data.data; // GET method returns data.data directly
+        const testSession: TestSession = data.data; // GET method returns data.data directly
 
-        if (session && session.status === "ACTIVE") {
-          setExistingSession(session);
+        if (testSession && testSession.status === "ACTIVE") {
+          setExistingTestSession(testSession);
         } else {
-          setExistingSession(null);
+          setExistingTestSession(null);
         }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to check session status"
+          err instanceof Error ? err.message : "Failed to check test session status"
         );
-        console.error("Error checking existing session:", err);
+        console.error("Error checking existing test session:", err);
       } finally {
         setIsLoading(false);
       }
@@ -61,8 +61,8 @@ export default function SessionResumption({
   }, [studentId]);
 
   const handleResumeSession = () => {
-    if (existingSession) {
-      onSessionResume?.(existingSession);
+    if (existingTestSession) {
+      onTestSessionResume?.(existingTestSession);
       router.push("/assessment");
     }
   };
@@ -99,16 +99,16 @@ export default function SessionResumption({
   };
 
   const handleCancelSession = async () => {
-    if (!existingSession) return;
+    if (!existingTestSession) return;
 
     try {
-      const response = await fetch(`/api/sessions`, {
+      const response = await fetch(`/api/test-sessions`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sessionId: existingSession.id,
+          testSessionId: existingTestSession.id,
           status: "CANCELLED",
         }),
       });
@@ -157,7 +157,7 @@ export default function SessionResumption({
     );
   }
 
-  if (!existingSession) {
+  if (!existingTestSession) {
     return null; // No existing session, show normal landing page
   }
 
@@ -191,27 +191,27 @@ export default function SessionResumption({
                       <div className="col-6">
                         <strong>Session ID:</strong>
                         <br />
-                        <code className="small">{existingSession.id}</code>
+                        <code className="small">{existingTestSession.id}</code>
                       </div>
                       <div className="col-6">
                         <strong>Started:</strong>
                         <br />
-                        {new Date(existingSession.createdAt).toLocaleString()}
+                        {new Date(existingTestSession.createdAt).toLocaleString()}
                       </div>
                       <div className="col-6">
                         <strong>Status:</strong>
                         <br />
                         <span
-                          className={`badge bg-${existingSession.status === "ACTIVE" ? "success" : "secondary"}`}
+                          className={`badge bg-${existingTestSession.status === "ACTIVE" ? "success" : "secondary"}`}
                         >
-                          {existingSession.status}
+                          {existingTestSession.status}
                         </span>
                       </div>
                       <div className="col-6">
                         <strong>Assessment ID:</strong>
                         <br />
                         <code className="small">
-                          {existingSession.assessmentId}
+                          {existingTestSession.assessmentId}
                         </code>
                       </div>
                     </div>
@@ -222,8 +222,8 @@ export default function SessionResumption({
               {/* Session Status */}
               <div className="mb-4">
                 <h6 className="mb-2">Current Status</h6>
-                <SessionStatus
-                  sessionId={existingSession.id}
+                <TestSessionStatus
+                  testSessionId={existingTestSession.id}
                   studentId={studentId}
                 />
               </div>

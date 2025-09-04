@@ -1,51 +1,60 @@
 import { prisma } from "./database";
-import { SessionModel, AssessmentResultModel } from "./models";
-import type { Session, SessionStatus, SessionWithResults } from "./models";
-import { sessionConfig } from "./config";
-import { generateLearnositySessionId } from "../utils/session-id-generator";
+import { TestSessionModel, AssessmentResultModel } from "./models";
+import type {
+  TestSession,
+  TestSessionStatus,
+  TestSessionWithResults,
+} from "./models";
+import { testSessionConfig } from "./config";
+import { generateLearnositySessionId } from "../utils/test-session-id-generator";
 
-export interface CreateSessionData {
+export interface CreateTestSessionData {
   studentId: string;
   learnositySessionId: string;
   assessmentId: string;
   expiresAt?: Date;
 }
 
-export interface SessionProgress {
+export interface TestSessionProgress {
   questionsAnswered: number;
   timeRemaining?: number;
 }
 
-export interface SessionSummary {
+export interface TestSessionSummary {
   id: string;
   studentId: string;
-  status: SessionStatus;
+  status: TestSessionStatus;
   createdAt: Date;
   expiresAt?: Date;
   isExpired: boolean;
   isActive: boolean;
 }
 
-export class SessionService {
+export class TestSessionService {
   /**
-   * Create a new assessment session
+   * Create a new assessment test session
    */
-  static async createSession(data: CreateSessionData): Promise<Session> {
+  static async createTestSession(
+    data: CreateTestSessionData
+  ): Promise<TestSession> {
     try {
-      // Check if student already has an active session
-      const existingSession = await SessionModel.findByStudentId(
+      // Check if student already has an active test session
+      const existingTestSession = await TestSessionModel.findByStudentId(
         data.studentId
       );
-      if (existingSession && existingSession.status === "ACTIVE") {
-        // If session exists but is expired, mark it as expired
+      if (existingTestSession && existingTestSession.status === "ACTIVE") {
+        // If test session exists but is expired, mark it as expired
         if (
-          existingSession.expiresAt &&
-          existingSession.expiresAt < new Date()
+          existingTestSession.expiresAt &&
+          existingTestSession.expiresAt < new Date()
         ) {
-          await SessionModel.updateStatus(existingSession.id, "EXPIRED");
+          await TestSessionModel.updateStatus(
+            existingTestSession.id,
+            "EXPIRED"
+          );
         } else {
           throw new Error(
-            `Student ${data.studentId} already has an active session`
+            `Student ${data.studentId} already has an active test session`
           );
         }
       }
@@ -53,32 +62,34 @@ export class SessionService {
       // Set default expiration if not provided
       const expiresAt =
         data.expiresAt ||
-        new Date(Date.now() + sessionConfig.timeoutMinutes * 60 * 1000);
+        new Date(Date.now() + testSessionConfig.timeoutMinutes * 60 * 1000);
 
       // Generate Learnosity session ID
       const learnositySessionId = generateLearnositySessionId();
 
-      // Create new session
-      const session = await SessionModel.create({
+      // Create new test session
+      const testSession = await TestSessionModel.create({
         ...data,
         learnositySessionId,
         expiresAt,
       });
 
       console.log(
-        `✅ Session created for student ${data.studentId}: ${session.id}`
+        `✅ Test session created for student ${data.studentId}: ${testSession.id}`
       );
-      return session;
+      return testSession;
     } catch (error) {
-      console.error("❌ Failed to create session:", error);
+      console.error("❌ Failed to create test session:", error);
       throw error;
     }
   }
 
   /**
-   * Retrieve a session by ID with full details
+   * Retrieve a test session by ID with full details
    */
-  static async getSessionById(id: string): Promise<SessionWithResults | null> {
+  static async getTestSessionById(
+    id: string
+  ): Promise<TestSessionWithResults | null> {
     try {
       const session = await SessionModel.findWithResults(id);
       if (!session) {
@@ -159,7 +170,7 @@ export class SessionService {
         throw new Error("Invalid progress values");
       }
 
-      const session = await prisma.session.update({
+      const session = await prisma.testSession.update({
         where: { id: sessionId },
         data: { updatedAt: new Date() },
       }); // updateProgress not available in current schema
@@ -236,7 +247,7 @@ export class SessionService {
       }
 
       // Update last accessed time
-      await prisma.session.update({
+      await prisma.testSession.update({
         where: { id: sessionId },
         data: { updatedAt: new Date() },
       });
@@ -315,8 +326,8 @@ export class SessionService {
       const [active, expired, completed, cancelled] = await Promise.all([
         SessionModel.findActive(),
         SessionModel.findExpired(),
-        prisma.session.count({ where: { status: "COMPLETED" } }),
-        prisma.session.count({ where: { status: "CANCELLED" } }),
+        prisma.testSession.count({ where: { status: "COMPLETED" } }),
+        prisma.testSession.count({ where: { status: "CANCELLED" } }),
       ]);
 
       const total = active.length + expired.length + completed + cancelled;
@@ -362,4 +373,4 @@ export class SessionService {
 }
 
 // Export the service class
-export default SessionService;
+export default TestSessionService;

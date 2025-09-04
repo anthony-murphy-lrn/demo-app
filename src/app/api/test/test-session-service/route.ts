@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import SessionService from "../../../../lib/session-service";
 
 export async function GET(_request: NextRequest) {
   try {
     // Test session service operations
     const [activeSessions, sessionStats] = await Promise.all([
-      SessionService.getActiveSessions(),
-      SessionService.getSessionStats(),
+      TestTestSessionService.getActiveSessions(),
+      TestTestSessionService.getSessionStats(),
     ]);
 
     return NextResponse.json({
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "createSession":
         // Create a test session using the service
-        const testSession = await SessionService.createSession({
+        const testSession = await TestSessionService.createSession({
           studentId: `test-student-service-${Date.now()}`,
           learnositySessionId: `test-learnosity-service-${Date.now()}`,
           assessmentId: "test-assessment-service",
@@ -62,7 +61,7 @@ export async function POST(request: NextRequest) {
 
       case "getSessionProgress":
         // Get session progress
-        const progress = await SessionService.getSessionProgress(
+        const progress = await TestSessionService.getSessionProgress(
           data.sessionId
         );
 
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       case "updateProgress":
         // Update session progress
-        const updatedSession = await SessionService.updateProgress(
+        const updatedSession = await TestSessionService.updateProgress(
           data.sessionId,
           data.currentQuestion,
           data.progress
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
 
       case "resumeSession":
         // Resume a session
-        const resumedSession = await SessionService.resumeSession(
+        const resumedSession = await TestSessionService.resumeSession(
           data.sessionId
         );
 
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
 
       case "completeSession":
         // Complete a session
-        const completedSession = await SessionService.completeSession(
+        const completedSession = await TestSessionService.completeSession(
           data.sessionId
         );
 
@@ -112,7 +111,7 @@ export async function POST(request: NextRequest) {
 
       case "cleanupExpired":
         // Clean up expired sessions
-        const cleanedCount = await SessionService.cleanupExpiredSessions();
+        const cleanedCount = await TestSessionService.cleanupExpiredSessions();
 
         return NextResponse.json({
           status: "success",

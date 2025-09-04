@@ -151,12 +151,7 @@ src/
 - `SESSION_TIMEOUT_MINUTES` - Session timeout duration
 - `NODE_ENV` - Environment mode
 
-### Learnosity Setup
 
-1. Create a Learnosity account at [learnosity.com](https://learnosity.com)
-2. Generate API credentials in your Learnosity dashboard
-3. Create an assessment using Learnosity's Authoring tool
-4. Update the environment variables with your credentials
 
 ## Development
 
@@ -249,17 +244,6 @@ The application includes several testing endpoints for development:
 - System status monitoring
 - Database statistics and metrics
 - Error reporting and diagnostics
-
-## Security Considerations
-
-- **Media Asset Security**: Restricted access windows for media assets
-- **Session Management**: Timeout handling and automatic session expiration
-- **Input Validation**: Comprehensive validation using Zod schemas
-- **Error Handling**: Secure error messages without sensitive data exposure
-- **Security Headers**: Proper HTTP security headers
-- **Data Validation**: Request body and query parameter validation
-- **Session Cleanup**: Automatic cleanup of expired and orphaned sessions
-- **Type Safety**: Full TypeScript coverage for type safety
 
 ## Contributing
 

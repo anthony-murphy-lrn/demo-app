@@ -21,30 +21,30 @@ import {
 export async function GET(request: NextRequest) {
   try {
     // Validate query parameters
-    const queryValidation = validateQueryParams(request, ["sessionId"]);
+    const queryValidation = validateQueryParams(request, ["testSessionId"]);
     const validationError = handleValidationErrors(queryValidation);
     if (validationError) return validationError;
 
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get("sessionId")!;
+    const testSessionId = searchParams.get("testSessionId")!;
 
-    // Validate session ID format
-    const idValidation = validateIdFormat(sessionId);
+    // Validate test session ID format
+    const idValidation = validateIdFormat(testSessionId);
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    // Check if session exists
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
+    // Check if test session exists
+    const testSession = await prisma.testSession.findUnique({
+      where: { id: testSessionId },
     });
 
-    if (!session) {
-      return handleNotFoundError("Session");
+    if (!testSession) {
+      return handleNotFoundError("Test Session");
     }
 
-    // Retrieve all results for the session
+    // Retrieve all results for the test session
     const results = await prisma.assessmentResult.findMany({
-      where: { sessionId },
+      where: { testSessionId },
       orderBy: { createdAt: "asc" },
     });
 
@@ -63,13 +63,13 @@ export async function POST(request: NextRequest) {
     const body: CreateResultRequest = await request.json();
 
     // Validate request body
-    const bodyValidation = validateRequestBody(body, ["sessionId", "response"]);
+    const bodyValidation = validateRequestBody(body, ["testSessionId", "response"]);
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) return validationError;
 
     // Validate individual fields
     const validations = [
-      validateIdFormat(body.sessionId),
+      validateIdFormat(body.testSessionId),
       validateJsonData(body.response, "response"),
     ];
 
@@ -77,37 +77,37 @@ export async function POST(request: NextRequest) {
     const combinedValidationError = handleValidationErrors(combinedValidation);
     if (combinedValidationError) return combinedValidationError;
 
-    // Check if session exists and is active
-    const session = await prisma.session.findUnique({
-      where: { id: body.sessionId },
+    // Check if test session exists and is active
+    const testSession = await prisma.testSession.findUnique({
+      where: { id: body.testSessionId },
     });
 
-    if (!session) {
-      return handleNotFoundError("Session");
+    if (!testSession) {
+      return handleNotFoundError("Test Session");
     }
 
-    if (session.status !== "ACTIVE") {
+    if (testSession.status !== "ACTIVE") {
       return createErrorResponse(
-        "Session is not active",
+        "Test session is not active",
         STATUS_CODES.BAD_REQUEST,
         undefined,
-        "INACTIVE_SESSION"
+        "INACTIVE_TEST_SESSION"
       );
     }
 
     // Create new result (no questionId needed)
     const result = await prisma.assessmentResult.create({
       data: {
-        sessionId: body.sessionId,
+        testSessionId: body.testSessionId,
         response: body.response,
         score: body.score,
         timeSpent: body.timeSpent,
       },
     });
 
-    // Get total results count for this session
+    // Get total results count for this test session
     const totalResults = await prisma.assessmentResult.count({
-      where: { sessionId: body.sessionId },
+      where: { testSessionId: body.testSessionId },
     });
 
     return createSuccessResponse(

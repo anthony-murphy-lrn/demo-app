@@ -4,38 +4,38 @@ import {
   createSuccessResponse,
   handleGenericError,
 } from "@/utils/error-handler";
-import SessionCleanupService from "@/lib/session-cleanup";
+import TestSessionCleanupService from "@/lib/test-session-cleanup";
 
-// POST /api/sessions/cleanup - Clean up expired sessions
+// POST /api/test-sessions/cleanup - Clean up expired test sessions
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId } = body;
+    const { testSessionId } = body;
 
     let cleanupResult;
 
-    if (sessionId) {
-      // Clean up specific session
+    if (testSessionId) {
+      // Clean up specific test session
       cleanupResult =
-        await SessionCleanupService.forceCleanupSession(sessionId);
+        await TestSessionCleanupService.forceCleanupTestSession(testSessionId);
     } else {
-      // Clean up all expired sessions
-      cleanupResult = await SessionCleanupService.performCleanup();
+      // Clean up all expired test sessions
+      cleanupResult = await TestSessionCleanupService.performCleanup();
     }
 
     return createSuccessResponse({
-      message: "Session cleanup completed successfully",
+      message: "Test session cleanup completed successfully",
       success: cleanupResult,
     });
   } catch (error) {
-    return handleGenericError(error, "Session Cleanup");
+    return handleGenericError(error, "Test Session Cleanup");
   }
 }
 
-// GET /api/sessions/cleanup - Get cleanup statistics
+// GET /api/test-sessions/cleanup - Get cleanup statistics
 export async function GET(_request: NextRequest) {
   try {
-    const statistics = await SessionCleanupService.getCleanupStats();
+    const statistics = await TestSessionCleanupService.getCleanupStats();
 
     return createSuccessResponse({
       message: "Cleanup statistics retrieved successfully",
@@ -46,10 +46,10 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-// PUT /api/sessions/cleanup - Update expired session statuses
+// PUT /api/test-sessions/cleanup - Update expired test session statuses
 export async function PUT(_request: NextRequest) {
   try {
-    const isNeeded = await SessionCleanupService.isCleanupNeeded();
+    const isNeeded = await TestSessionCleanupService.isCleanupNeeded();
 
     return createSuccessResponse({
       message: "Cleanup status checked successfully",
@@ -60,7 +60,7 @@ export async function PUT(_request: NextRequest) {
   }
 }
 
-// PATCH /api/sessions/cleanup - Control automated cleanup
+// PATCH /api/test-sessions/cleanup - Control automated cleanup
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
@@ -78,16 +78,16 @@ export async function PATCH(request: NextRequest) {
     switch (action) {
       case "start":
         // Perform cleanup immediately
-        const cleanupResult = await SessionCleanupService.performCleanup();
+        const cleanupResult = await TestSessionCleanupService.performCleanup();
         result = { message: "Cleanup performed", ...cleanupResult };
         break;
       case "stop":
         // Check if cleanup is needed
-        const isNeeded = await SessionCleanupService.isCleanupNeeded();
+        const isNeeded = await TestSessionCleanupService.isCleanupNeeded();
         result = { message: "Cleanup status checked", isNeeded };
         break;
       case "status":
-        const stats = await SessionCleanupService.getCleanupStats();
+        const stats = await TestSessionCleanupService.getCleanupStats();
         result = {
           message: "Cleanup service status retrieved",
           status: stats,

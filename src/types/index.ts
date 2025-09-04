@@ -1,5 +1,5 @@
 // Database types
-export interface Session {
+export interface TestSession {
   id: string;
   studentId: string;
   learnositySessionId: string;
@@ -13,7 +13,7 @@ export interface Session {
 
 export interface AssessmentResult {
   id: string;
-  sessionId: string;
+  testSessionId: string;
   response: any;
   score?: number;
   timeSpent?: number;
@@ -22,17 +22,17 @@ export interface AssessmentResult {
 }
 
 // API types
-export interface CreateSessionRequest {
+export interface CreateTestSessionRequest {
   studentId: string;
   assessmentId: string;
 }
 
-export interface UpdateSessionRequest {
-  status?: Session["status"];
+export interface UpdateTestSessionRequest {
+  status?: TestSession["status"];
 }
 
 export interface CreateResultRequest {
-  sessionId: string;
+  testSessionId: string;
   response: any;
   score?: number;
   timeSpent?: number;
@@ -57,7 +57,7 @@ export interface LearnosityResponse {
       itemsRequest: any;
       securityConfig: any;
     };
-    session: {
+    testSession: {
       id: string;
       studentId: string;
       assessmentId: string;

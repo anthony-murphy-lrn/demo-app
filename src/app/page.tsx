@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LandingPage from "@/components/LandingPage";
-import SessionResumption from "@/components/SessionResumption";
+import TestSessionResumption from "@/components/TestSessionResumption";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Session } from "@/types";
+import { TestSession } from "@/types";
 
 export default function Home() {
-  const [, setCurrentSession] = useState<Session | null>(null);
+  const [, setCurrentTestSession] = useState<TestSession | null>(null);
   const [studentId, setStudentId] = useState<string>("");
   const router = useRouter();
 
   const handleStartAssessment = async (newStudentId: string): Promise<void> => {
     setStudentId(newStudentId);
     try {
-      // Create a new session
-      const response = await fetch("/api/sessions", {
+      // Create a new test session
+      const response = await fetch("/api/test-sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,11 +32,11 @@ export default function Home() {
       }
 
       const data = await response.json();
-      setCurrentSession(data.data.session); // API returns data.data.session
+      setCurrentTestSession(data.data.testSession); // API returns data.data.testSession
 
-      // Navigate to assessment page with session details
+      // Navigate to assessment page with test session details
       router.push(
-        `/assessment?studentId=${newStudentId}&sessionId=${data.data.session.id}`
+        `/assessment?studentId=${newStudentId}&testSessionId=${data.data.testSession.id}`
       );
     } catch (error) {
       console.error("Error starting assessment:", error);
@@ -44,17 +44,17 @@ export default function Home() {
     }
   };
 
-  const handleSessionResume = (session: Session) => {
-    setCurrentSession(session);
+  const handleTestSessionResume = (testSession: TestSession) => {
+    setCurrentTestSession(testSession);
   };
 
   return (
     <ErrorBoundary>
       <main>
         {studentId && (
-          <SessionResumption
+          <TestSessionResumption
             studentId={studentId}
-            onSessionResume={handleSessionResume}
+            onTestSessionResume={handleTestSessionResume}
           />
         )}
         <LandingPage onStartAssessment={handleStartAssessment} />

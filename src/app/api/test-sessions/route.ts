@@ -1,15 +1,15 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
 import { STATUS_CODES, SUCCESS_MESSAGES } from "@/constants";
-import { CreateSessionRequest, UpdateSessionRequest } from "@/types";
+import { CreateTestSessionRequest, UpdateTestSessionRequest } from "@/types";
 import {
   validateQueryParams,
   validateRequestBody,
   validateIdFormat,
-  validateSessionStatus,
+  validateTestSessionStatus,
   combineValidationResults,
 } from "@/utils/validation";
-import { generateLearnositySessionId } from "@/utils/session-id-generator";
+import { generateLearnositySessionId } from "@/utils/test-session-id-generator";
 import {
   createSuccessResponse,
   handleValidationErrors,
@@ -17,7 +17,7 @@ import {
   handleGenericError,
 } from "@/utils/error-handler";
 
-// GET /api/sessions - Retrieve session by student ID
+// GET /api/test-sessions - Retrieve test session by student ID
 export async function GET(request: NextRequest) {
   try {
     // Validate query parameters
@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    // Find the most recent active session for the student
-    const session = await prisma.session.findFirst({
+    // Find the most recent active test session for the student
+    const testSession = await prisma.testSession.findFirst({
       where: {
         studentId,
         status: "ACTIVE",
@@ -47,30 +47,30 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!session) {
-      return handleNotFoundError("Session");
+    if (!testSession) {
+      return handleNotFoundError("Test Session");
     }
 
-    // Check if session has expired
-    if (session.expiresAt && session.expiresAt < new Date()) {
-      await prisma.session.update({
-        where: { id: session.id },
+    // Check if test session has expired
+    if (testSession.expiresAt && testSession.expiresAt < new Date()) {
+      await prisma.testSession.update({
+        where: { id: testSession.id },
         data: { status: "EXPIRED" },
       });
 
-      return handleNotFoundError("Session");
+      return handleNotFoundError("Test Session");
     }
 
-    return createSuccessResponse(session);
+    return createSuccessResponse(testSession);
   } catch (error) {
-    return handleGenericError(error, "Session Retrieval");
+    return handleGenericError(error, "Test Session Retrieval");
   }
 }
 
-// POST /api/sessions - Create new session
+// POST /api/test-sessions - Create new test session
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateSessionRequest = await request.json();
+    const body: CreateTestSessionRequest = await request.json();
 
     // Validate request body
     const bodyValidation = validateRequestBody(body, [
@@ -90,24 +90,24 @@ export async function POST(request: NextRequest) {
     const combinedValidationError = handleValidationErrors(combinedValidation);
     if (combinedValidationError) return combinedValidationError;
 
-    // Check if student already has an active session
-    const existingActiveSession = await prisma.session.findFirst({
+    // Check if student already has an active test session
+    const existingActiveTestSession = await prisma.testSession.findFirst({
       where: {
         studentId: body.studentId,
         status: "ACTIVE",
       },
     });
 
-    if (existingActiveSession) {
-      // If student has an active session, we have a few options:
+    if (existingActiveTestSession) {
+      // If student has an active test session, we have a few options:
       // 1. Return an error (current behavior)
-      // 2. Automatically expire the old session and create a new one
+      // 2. Automatically expire the old test session and create a new one
       // 3. Allow the student to choose what to do
 
-      // For now, let's automatically expire the old session and create a new one
+      // For now, let's automatically expire the old test session and create a new one
       // This provides a better user experience
-      await prisma.session.update({
-        where: { id: existingActiveSession.id },
+      await prisma.testSession.update({
+        where: { id: existingActiveTestSession.id },
         data: {
           status: "EXPIRED",
           updatedAt: new Date(),
@@ -115,15 +115,15 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(
-        `🔄 Expired previous active session ${existingActiveSession.id} for student ${body.studentId}`
+        `🔄 Expired previous active test session ${existingActiveTestSession.id} for student ${body.studentId}`
       );
     }
 
     // Generate Learnosity session ID
     const learnositySessionId = generateLearnositySessionId();
 
-    // Create new session
-    const session = await prisma.session.create({
+    // Create new test session
+    const testSession = await prisma.testSession.create({
       data: {
         studentId: body.studentId,
         assessmentId: body.assessmentId,
@@ -137,38 +137,38 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(
       {
-        message: SUCCESS_MESSAGES.SESSION_CREATED,
-        session,
+        message: SUCCESS_MESSAGES.TEST_SESSION_CREATED,
+        testSession,
       },
       STATUS_CODES.CREATED
     );
   } catch (error) {
-    return handleGenericError(error, "Session Creation");
+    return handleGenericError(error, "Test Session Creation");
   }
 }
 
-// PUT /api/sessions - Update session
+// PUT /api/test-sessions - Update test session
 export async function PUT(request: NextRequest) {
   try {
     // Validate query parameters
-    const queryValidation = validateQueryParams(request, ["sessionId"]);
+    const queryValidation = validateQueryParams(request, ["testSessionId"]);
     const validationError = handleValidationErrors(queryValidation);
     if (validationError) return validationError;
 
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get("sessionId")!;
+    const testSessionId = searchParams.get("testSessionId")!;
 
-    // Validate session ID format
-    const idValidation = validateIdFormat(sessionId);
+    // Validate test session ID format
+    const idValidation = validateIdFormat(testSessionId);
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    const body: UpdateSessionRequest = await request.json();
+    const body: UpdateTestSessionRequest = await request.json();
 
     // Validate update fields if provided
     const validations = [];
     if (body.status !== undefined) {
-      validations.push(validateSessionStatus(body.status));
+      validations.push(validateTestSessionStatus(body.status));
     }
 
     if (validations.length > 0) {
@@ -178,18 +178,18 @@ export async function PUT(request: NextRequest) {
       if (combinedValidationError) return combinedValidationError;
     }
 
-    // Check if session exists
-    const existingSession = await prisma.session.findUnique({
-      where: { id: sessionId },
+    // Check if test session exists
+    const existingTestSession = await prisma.testSession.findUnique({
+      where: { id: testSessionId },
     });
 
-    if (!existingSession) {
-      return handleNotFoundError("Session");
+    if (!existingTestSession) {
+      return handleNotFoundError("Test Session");
     }
 
-    // Update session
-    const updatedSession = await prisma.session.update({
-      where: { id: sessionId },
+    // Update test session
+    const updatedTestSession = await prisma.testSession.update({
+      where: { id: testSessionId },
       data: {
         status: body.status,
         updatedAt: new Date(),
@@ -201,9 +201,9 @@ export async function PUT(request: NextRequest) {
 
     return createSuccessResponse({
       message: SUCCESS_MESSAGES.PROGRESS_SAVED,
-      session: updatedSession,
+      testSession: updatedTestSession,
     });
   } catch (error) {
-    return handleGenericError(error, "Session Update");
+    return handleGenericError(error, "Test Session Update");
   }
 }

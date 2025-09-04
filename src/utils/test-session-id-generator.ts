@@ -1,19 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * Generate a unique session ID using UUIDv4
+ * Generate a unique test session ID using UUIDv4
  * This follows Learnosity's best practices for session identification
  * Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36 characters)
  */
-export function generateSessionId(): string {
+export function generateTestSessionId(): string {
   return uuidv4();
 }
 
 /**
- * Generate a unique session ID using UUIDv4
+ * Generate a unique test session ID using UUIDv4
  * This is the recommended approach for Learnosity integrations
  */
-export function generateUniqueSessionId(): string {
+export function generateUniqueTestSessionId(): string {
   return uuidv4();
 }
 
@@ -27,23 +27,23 @@ export function generateLearnositySessionId(): string {
 }
 
 /**
- * Validate if a session ID follows the expected format
+ * Validate if a test session ID follows the expected format
  */
-export function validateSessionIdFormat(sessionId: string): boolean {
+export function validateTestSessionIdFormat(testSessionId: string): boolean {
   // Check if it's a valid UUIDv4 format
   const uuidv4Regex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  if (uuidv4Regex.test(sessionId)) {
+  if (uuidv4Regex.test(testSessionId)) {
     return true;
   }
 
   // For backward compatibility, also accept the old timestamp format
-  if (/^\d{14}$/.test(sessionId)) {
+  if (/^\d{14}$/.test(testSessionId)) {
     return true;
   }
 
-  if (/^\d{18}$/.test(sessionId)) {
+  if (/^\d{18}$/.test(testSessionId)) {
     return true;
   }
 

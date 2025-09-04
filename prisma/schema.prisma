@@ -11,11 +11,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Session {
+model TestSession {
   id          String   @id @default(uuid())
-  studentId   String   // Allow multiple sessions per student
+  studentId   String   // Allow multiple test sessions per student
   learnositySessionId String
-  status      SessionStatus @default(ACTIVE)
+  status      TestSessionStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   expiresAt   DateTime?
@@ -26,13 +26,13 @@ model Session {
   // Results relationship
   results AssessmentResult[]
   
-  @@map("sessions")
+  @@map("test_sessions")
 }
 
 model AssessmentResult {
   id          String   @id @default(uuid())
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  testSessionId   String
+  testSession     TestSession  @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
   
   // Result data
   response    Json
@@ -46,7 +46,7 @@ model AssessmentResult {
   @@map("assessment_results")
 }
 
-enum SessionStatus {
+enum TestSessionStatus {
   ACTIVE
   COMPLETED
   EXPIRED

@@ -1,5 +1,5 @@
 import Learnosity from "learnosity-sdk-nodejs";
-import { learnosityConfig, sessionConfig } from "./config";
+import { learnosityConfig, testSessionConfig } from "./config";
 import { LearnositySessionConfig, LearnosityResponse } from "@/types";
 
 // Learnosity API integration utilities using official SDK
@@ -56,7 +56,7 @@ export class LearnosityService {
   generateSecurityConfig(sessionId: string): Record<string, any> {
     try {
       const expiresAt = new Date(
-        Date.now() + sessionConfig.learnosityExpiresMinutes * 60 * 1000
+        Date.now() + testSessionConfig.learnosityExpiresMinutes * 60 * 1000
       ).toISOString();
 
       // Use the SDK to generate a security request
@@ -273,7 +273,7 @@ export class LearnosityService {
   // Helper method to format expires time in Learnosity format (YYYYMMDD-HHMM)
   private formatExpiresTime(): string {
     const expiresDate = new Date(
-      Date.now() + sessionConfig.learnosityExpiresMinutes * 60 * 1000
+      Date.now() + testSessionConfig.learnosityExpiresMinutes * 60 * 1000
     );
     return expiresDate
       .toISOString()

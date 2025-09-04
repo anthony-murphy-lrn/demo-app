@@ -1,40 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Session } from "@/types";
+import { TestSession } from "@/types";
 
-interface SessionStatusProps {
-  sessionId: string;
+interface TestSessionStatusProps {
+  testSessionId: string;
   studentId: string;
 }
 
-export default function SessionStatus({
-  sessionId,
+export default function TestSessionStatus({
+  testSessionId,
   studentId,
-}: SessionStatusProps) {
+}: TestSessionStatusProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Simple validation that session exists
-  const validateSession = async () => {
+  // Simple validation that test session exists
+  const validateTestSession = async () => {
     try {
-      const response = await fetch(`/api/sessions?studentId=${studentId}`);
+      const response = await fetch(`/api/test-sessions?studentId=${studentId}`);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch session status");
+        throw new Error("Failed to fetch test session status");
       }
 
       const data = await response.json();
-      const session: Session = data.data;
+      const testSession: TestSession = data.data;
 
-      if (!session || session.id !== sessionId) {
-        throw new Error("Session not found");
+      if (!testSession || testSession.id !== testSessionId) {
+        throw new Error("Test session not found");
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load session status"
+        err instanceof Error ? err.message : "Failed to load test session status"
       );
-      console.error("Error validating session:", err);
+      console.error("Error validating test session:", err);
     } finally {
       setIsLoading(false);
     }
@@ -42,8 +42,8 @@ export default function SessionStatus({
 
   // Validate session on mount
   useEffect(() => {
-    validateSession();
-  }, [sessionId, studentId]);
+    validateTestSession();
+  }, [testSessionId, studentId]);
 
   if (isLoading) {
     return (
@@ -74,7 +74,7 @@ export default function SessionStatus({
         {/* Session ID Only */}
         <div className="col">
           <div className="d-flex align-items-center">
-            <small className="text-muted">Session ID: {sessionId}</small>
+            <small className="text-muted">Test Session ID: {testSessionId}</small>
           </div>
         </div>
       </div>

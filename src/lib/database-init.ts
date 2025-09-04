@@ -51,7 +51,7 @@ export async function resetDatabase() {
 
     // Delete all data from tables
     await prisma.assessmentResult.deleteMany();
-    await prisma.session.deleteMany();
+    await prisma.testSession.deleteMany();
 
     console.log("✅ Database reset completed");
     return true;
@@ -66,7 +66,7 @@ export async function resetDatabase() {
  */
 export async function getDatabaseStats() {
   try {
-    const sessionCount = await prisma.session.count();
+    const sessionCount = await prisma.testSession.count();
     const resultCount = await prisma.assessmentResult.count();
 
     return {

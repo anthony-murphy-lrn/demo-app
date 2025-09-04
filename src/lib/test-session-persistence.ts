@@ -10,7 +10,7 @@ export interface ResumePoint {
   canResume: boolean;
 }
 
-export class SessionPersistenceService {
+export class TestSessionPersistenceService {
   /**
    * Save session state automatically
    */
@@ -136,4 +136,4 @@ export class SessionPersistenceService {
 }
 
 // Export the service class
-export default SessionPersistenceService;
+export default TestSessionPersistenceService;

@@ -21,18 +21,25 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("Learnosity API - Received request body:", body);
 
     // Validate request body
     const bodyValidation = validateRequestBody(body, [
-      "sessionId",
+      "testSessionId",
       "studentId",
     ]);
+    console.log("Learnosity API - Body validation result:", bodyValidation);
+    console.log("Learnosity API - Request body received:", JSON.stringify(body, null, 2));
     const validationError = handleValidationErrors(bodyValidation);
-    if (validationError) return validationError;
+    if (validationError) {
+      console.log("Learnosity API - Validation error:", validationError);
+      console.log("Learnosity API - Validation error details:", JSON.stringify(validationError, null, 2));
+      return validationError;
+    }
 
     // Validate individual fields
     const validations = [
-      validateIdFormat(body.sessionId),
+      validateIdFormat(body.testSessionId),
       validateIdFormat(body.studentId),
     ];
 
@@ -50,36 +57,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Retrieve session from database
-    const session = await prisma.session.findUnique({
-      where: { id: body.sessionId },
+    // Retrieve test session from database
+    console.log("Learnosity API - Looking for test session with ID:", body.testSessionId);
+    const testSession = await prisma.testSession.findUnique({
+      where: { id: body.testSessionId },
     });
+    console.log("Learnosity API - Found test session:", testSession);
 
-    if (!session) {
-      return handleNotFoundError("Session");
+    if (!testSession) {
+      console.log("Learnosity API - Test session not found");
+      return handleNotFoundError("Test Session");
     }
 
-    // Check if session has expired
-    if (session.expiresAt && session.expiresAt < new Date()) {
-      await prisma.session.update({
-        where: { id: body.sessionId },
+    // Check if test session has expired
+    if (testSession.expiresAt && testSession.expiresAt < new Date()) {
+      await prisma.testSession.update({
+        where: { id: body.testSessionId },
         data: { status: "EXPIRED" },
       });
 
-      return handleNotFoundError("Session");
+      return handleNotFoundError("Test Session");
     }
 
     try {
       // Generate Items API request using SDK
       const itemsRequest = learnosityService.generateItemsRequest(
         body.studentId,
-        session.learnositySessionId,
+        testSession.learnositySessionId,
         learnosityConfig.activityId
       );
 
       // Generate security configuration for media assets
       const securityConfig = learnosityService.generateSecurityConfig(
-        session.learnositySessionId
+        testSession.learnositySessionId
       );
 
       return createSuccessResponse({
@@ -88,11 +98,11 @@ export async function POST(request: NextRequest) {
           itemsRequest: itemsRequest,
           securityConfig: securityConfig,
         },
-        session: {
-          id: session.id,
-          studentId: session.studentId,
-          assessmentId: session.assessmentId,
-          status: session.status,
+        testSession: {
+          id: testSession.id,
+          studentId: testSession.studentId,
+          assessmentId: testSession.assessmentId,
+          status: testSession.status,
         },
       });
     } catch (learnosityError: unknown) {
@@ -149,12 +159,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Retrieve session from database
-    const session = await prisma.session.findUnique({
+    const session = await prisma.testSession.findUnique({
       where: { id: sessionId },
     });
 
     if (!session) {
-      return handleNotFoundError("Session");
+      return handleNotFoundError("Test Session");
     }
 
     try {

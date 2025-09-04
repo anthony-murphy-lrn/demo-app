@@ -117,8 +117,8 @@ export function validateNumericRange(
   };
 }
 
-// Validate session status
-export function validateSessionStatus(status: string): ValidationResult {
+// Validate test session status
+export function validateTestSessionStatus(status: string): ValidationResult {
   const errors: ValidationError[] = [];
   const validStatuses = ["ACTIVE", "COMPLETED", "EXPIRED", "CANCELLED"];
 

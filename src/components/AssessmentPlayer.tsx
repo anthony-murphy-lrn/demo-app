@@ -43,19 +43,29 @@ export default function AssessmentPlayer({
         setError(null);
 
         // Fetch Learnosity configuration from our API
+        const requestBody = {
+          testSessionId: sessionId,
+          studentId,
+        };
+        
+        console.log("AssessmentPlayer - Sending request to /api/learnosity with body:", requestBody);
+        
         const response = await fetch("/api/learnosity", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            sessionId,
-            studentId,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to initialize assessment session");
+          const errorText = await response.text();
+          console.error("AssessmentPlayer - API error response:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          });
+          throw new Error(`Failed to initialize assessment session: ${response.status} ${response.statusText}`);
         }
 
         const data: LearnosityResponse = await response.json();

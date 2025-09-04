@@ -3,83 +3,83 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AssessmentPlayer from "@/components/AssessmentPlayer";
-import SessionStatus from "@/components/SessionStatus";
+import TestSessionStatus from "@/components/TestSessionStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Session } from "@/types";
+import { TestSession } from "@/types";
 
 export default function AssessmentPage() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [testSession, setTestSession] = useState<TestSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get session ID and student ID from URL params
-  const sessionId = searchParams.get("sessionId");
+  // Get test session ID and student ID from URL params
+  const testSessionId = searchParams.get("testSessionId");
   const studentId = searchParams.get("studentId");
 
   useEffect(() => {
-    const loadSession = async () => {
+    const loadTestSession = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
         // Validate required parameters
-        if (!studentId) {
-          console.log("Student ID not found in URL params:", {
+        if (!studentId || !testSessionId) {
+          console.log("Missing required parameters:", {
             studentId,
-            sessionId,
+            testSessionId,
           });
-          throw new Error("Student ID is required");
+          throw new Error("Student ID and Test Session ID are required");
         }
 
-        // Fetch session details
-        const response = await fetch(`/api/sessions?studentId=${studentId}`);
+        // Fetch test session details using the testSessionId from URL params
+        const response = await fetch(`/api/test-sessions/${testSessionId}`);
 
         if (!response.ok) {
-          throw new Error("Failed to load session");
+          throw new Error("Failed to load test session");
         }
 
         const data = await response.json();
-        const sessionData: Session = data.data; // GET method returns data.data directly
+        const testSessionData: TestSession = data.data; // GET method returns data.data
 
-        if (!sessionData) {
-          throw new Error("No active session found");
+        if (!testSessionData) {
+          throw new Error("No active test session found");
         }
 
-        if (sessionData.status === "EXPIRED") {
+        if (testSessionData.status === "EXPIRED") {
           throw new Error(
-            "Session has expired. Please start a new assessment."
+            "Test session has expired. Please start a new assessment."
           );
         }
 
-        setSession(sessionData);
+        setTestSession(testSessionData);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load assessment";
         setError(errorMessage);
-        console.error("Error loading session:", err);
+        console.error("Error loading test session:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadSession();
-  }, [studentId]);
+    loadTestSession();
+  }, [studentId, testSessionId]);
 
   const handleAssessmentComplete = async (results: any) => {
     try {
       console.log("Assessment completed:", results);
 
-      // Update session status to completed
-      if (session) {
-        await fetch("/api/sessions", {
+      // Update test session status to completed
+      if (testSession) {
+        await fetch("/api/test-sessions", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            sessionId: session.id,
+            testSessionId: testSession.id,
             status: "COMPLETED",
           }),
         });
@@ -143,13 +143,13 @@ export default function AssessmentPage() {
     );
   }
 
-  if (!session || !studentId) {
+  if (!testSession || !studentId) {
     return (
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
         <div className="text-center">
           <div className="alert alert-warning" role="alert">
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-            <strong>No Session Found</strong>
+            <strong>No Test Session Found</strong>
           </div>
           <button className="btn btn-primary" onClick={() => router.push("/")}>
             <i className="bi bi-house me-2"></i>
@@ -166,16 +166,16 @@ export default function AssessmentPage() {
         className="assessment-page"
         style={{ maxWidth: "100vw", overflow: "hidden" }}
       >
-        {/* Session Status Header */}
+        {/* Test Session Status Header */}
         <div className="bg-white border-bottom py-2">
           <div className="container">
-            <SessionStatus sessionId={session.id} studentId={studentId} />
+            <TestSessionStatus testSessionId={testSession.id} studentId={studentId} />
           </div>
         </div>
 
         {/* Assessment Player */}
         <AssessmentPlayer
-          sessionId={session.id}
+          sessionId={testSession.id}
           studentId={studentId}
           onComplete={handleAssessmentComplete}
           onError={handleAssessmentError}
