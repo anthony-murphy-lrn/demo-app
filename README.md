@@ -5,7 +5,7 @@ A NextJS-based demonstration application for Learnosity's assessment delivery ca
 ## Features
 
 - **Learnosity Integration**: Seamless integration with Learnosity's Items API for assessment delivery
-- **Session Management**: Resumable assessment sessions with local persistence and timeout handling
+- **Session Management**: Resumable assessment sessions with Learnosity-managed status and local persistence
 - **Security Features**: Media asset security with restricted access windows and input validation
 - **Responsive Design**: Bootstrap 5-styled interface optimized for desktop and mobile devices
 - **Local Development**: SQLite database with Prisma ORM for easy local setup and management
@@ -14,6 +14,25 @@ A NextJS-based demonstration application for Learnosity's assessment delivery ca
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Session Cleanup**: Automatic cleanup of expired sessions and orphaned data
 - **Demo Ready**: Simple, intuitive interface for showcasing Learnosity capabilities
+
+## Architecture
+
+### Learnosity-First Design
+
+This application follows a **Learnosity-first architecture** where:
+
+- **Session Status**: Managed entirely by Learnosity, not stored locally
+- **Single Source of Truth**: Learnosity is the authoritative source for session state
+- **Local Persistence**: Only stores essential metadata (student ID, timestamps, etc.)
+- **Status Queries**: Session status is queried from Learnosity when needed
+- **Simplified Logic**: Reduced complexity by removing local status management
+
+### Key Benefits
+
+- **Consistency**: No sync issues between local and Learnosity status
+- **Reliability**: Learnosity's robust session management handles edge cases
+- **Simplicity**: Cleaner codebase with less status-related logic
+- **Maintainability**: Easier to maintain without complex status synchronization
 
 ## Tech Stack
 
@@ -104,24 +123,52 @@ Use the test endpoints for development and debugging:
 
 ```
 src/
-├── app/                    # NextJS App Router
-│   ├── api/               # API routes
-│   │   ├── sessions/      # Session management
-│   │   ├── learnosity/    # Learnosity integration
-│   │   └── results/       # Assessment results
-│   ├── assessment/        # Assessment player page
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Landing page
-│   └── globals.css        # Global styles
-├── components/            # React components
-├── lib/                   # Utilities and configurations
-│   ├── database.ts        # Prisma client
-│   └── config.ts          # Environment configuration
-├── types/                 # TypeScript type definitions
-├── utils/                 # Utility functions
-├── hooks/                 # Custom React hooks
-├── constants/             # Application constants
-└── generated/             # Generated Prisma client
+├── app/                           # NextJS App Router
+│   ├── api/                      # API routes
+│   │   ├── health/               # Health monitoring
+│   │   │   └── database/         # Database health checks
+│   │   ├── learnosity/           # Learnosity integration
+│   │   ├── results/              # Assessment results
+│   │   ├── test-sessions/        # Test session management
+│   │   │   ├── [id]/            # Individual session routes
+│   │   │   └── cleanup/         # Session cleanup
+│   │   └── test/                # Development testing endpoints
+│   │       ├── database-seeder/  # Database seeding tests
+│   │       ├── models/          # Model testing
+│   │       ├── test-session-cleanup/    # Cleanup testing
+│   │       ├── test-session-persistence/ # Persistence testing
+│   │       └── test-session-service/    # Service testing
+│   ├── assessment/               # Assessment player page
+│   ├── layout.tsx               # Root layout
+│   ├── page.tsx                 # Landing page
+│   └── globals.css              # Global styles
+├── components/                   # React components
+│   ├── AssessmentPlayer.tsx     # Learnosity assessment player
+│   ├── ErrorBoundary.tsx        # Error boundary component
+│   ├── LandingPage.tsx          # Homepage component
+│   ├── StartAssessmentButton.tsx # Assessment start button
+│   ├── TestSessionResumption.tsx # Session resumption UI
+│   └── index.ts                 # Component exports
+├── lib/                         # Core business logic
+│   ├── config.ts                # Environment configuration
+│   ├── database.ts              # Prisma client
+│   ├── database-init.ts         # Database initialization
+│   ├── database-seeder.ts       # Demo data seeding
+│   ├── learnosity.ts            # Learnosity API integration
+│   ├── models.ts                # Database models
+│   ├── session-persistence.ts   # Session persistence logic
+│   ├── test-session-cleanup.ts  # Session cleanup service
+│   ├── test-session-persistence.ts # Test session persistence
+│   └── test-session-service.ts  # Test session business logic
+├── types/                       # TypeScript type definitions
+├── utils/                       # Utility functions
+│   ├── error-handler.ts         # Error handling utilities
+│   ├── test-session-id-generator.ts # ID generation
+│   └── validation.ts            # Input validation
+├── hooks/                       # Custom React hooks
+├── constants/                   # Application constants
+└── generated/                   # Generated Prisma client
+    └── prisma/                  # Prisma generated files
 ```
 
 ## Available Scripts
@@ -175,27 +222,30 @@ The application uses SQLite with Prisma ORM:
 
 The application uses two main models:
 
-- **Session**: Stores assessment session information
+- **TestSession**: Stores assessment session information
   - `id`: Unique session identifier
   - `studentId`: Student identifier
   - `learnositySessionId`: Learnosity session reference
-  - `status`: Session status (ACTIVE, COMPLETED, EXPIRED, CANCELLED)
   - `assessmentId`: Assessment identifier
   - `expiresAt`: Session expiration timestamp
+  - `createdAt`: Session creation timestamp
+  - `updatedAt`: Last update timestamp
+  - **Note**: Session status is managed by Learnosity, not stored locally
 
 - **AssessmentResult**: Stores assessment results
   - `id`: Unique result identifier
-  - `sessionId`: Reference to parent session
+  - `testSessionId`: Reference to parent test session
   - `response`: JSON response data
   - `score`: Calculated score (optional)
   - `timeSpent`: Time spent in seconds (optional)
+  - `createdAt`: Result creation timestamp
 
 ### API Routes
 
 API routes are organized by functionality:
 
-- `/api/sessions` - Session management (GET, POST, PUT, DELETE)
-- `/api/sessions/cleanup` - Session cleanup and maintenance
+- `/api/test-sessions` - Test session management (GET, POST, PUT)
+- `/api/test-sessions/cleanup` - Session cleanup and maintenance
 - `/api/learnosity` - Learnosity integration and session initialization
 - `/api/results` - Assessment results storage and retrieval
 - `/api/health/database` - Database health monitoring
@@ -234,9 +284,9 @@ The application includes several testing endpoints for development:
 
 - Automatic session creation with unique IDs
 - Resumable sessions with timeout handling
-- Session status tracking (ACTIVE, COMPLETED, EXPIRED, CANCELLED)
+- Learnosity-managed session status (not stored locally)
 - Progress saving and restoration
-- Automatic cleanup of expired sessions
+- Automatic cleanup of expired sessions based on timestamps
 
 ### Health Monitoring
 
@@ -274,8 +324,9 @@ This project is for demonstration purposes. Please refer to Learnosity's terms o
 
 **Session Not Resuming**
 
-- Check if the session has expired (default: 60 minutes)
+- Check if the session has expired (based on expiresAt timestamp)
 - Verify the session exists in the database
+- Check Learnosity for current session status
 - Check browser console for JavaScript errors
 
 **Assessment Not Loading**
