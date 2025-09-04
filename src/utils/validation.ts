@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { STATUS_CODES, ERROR_MESSAGES } from "@/constants";
 
 // Validation utilities for API requests
 
@@ -22,7 +21,10 @@ export function validateRequiredFields(
   const errors: ValidationError[] = [];
 
   for (const field of requiredFields) {
-    if (!body[field] || (typeof body[field] === "string" && body[field].trim() === "")) {
+    if (
+      !body[field] ||
+      (typeof body[field] === "string" && body[field].trim() === "")
+    ) {
       errors.push({
         field,
         message: `${field} is required`,
@@ -230,4 +232,3 @@ export function combineValidationResults(
     errors: allErrors,
   };
 }
-

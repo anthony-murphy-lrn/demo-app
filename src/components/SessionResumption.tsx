@@ -27,14 +27,14 @@ export default function SessionResumption({
         setError(null);
 
         const response = await fetch(`/api/sessions?studentId=${studentId}`);
-        
+
         if (response.status === 404) {
           // No existing session found - this is normal, not an error
           console.log("No existing session found for student:", studentId);
           setExistingSession(null);
           return;
         }
-        
+
         if (!response.ok) {
           throw new Error("Failed to check for existing session");
         }
@@ -48,7 +48,9 @@ export default function SessionResumption({
           setExistingSession(null);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to check session status");
+        setError(
+          err instanceof Error ? err.message : "Failed to check session status"
+        );
         console.error("Error checking existing session:", err);
       } finally {
         setIsLoading(false);
@@ -89,7 +91,9 @@ export default function SessionResumption({
       onSessionResume?.(newSession);
       router.push("/assessment");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start new session");
+      setError(
+        err instanceof Error ? err.message : "Failed to start new session"
+      );
       console.error("Error creating new session:", err);
     }
   };
@@ -166,10 +170,15 @@ export default function SessionResumption({
               {/* Header */}
               <div className="text-center mb-4">
                 <div className="mb-3">
-                  <i className="bi bi-arrow-clockwise text-warning" style={{ fontSize: "3rem" }}></i>
+                  <i
+                    className="bi bi-arrow-clockwise text-warning"
+                    style={{ fontSize: "3rem" }}
+                  ></i>
                 </div>
                 <h2 className="h3 fw-bold text-dark mb-2">Resume Assessment</h2>
-                <p className="text-muted mb-0">You have an active assessment session</p>
+                <p className="text-muted mb-0">
+                  You have an active assessment session
+                </p>
               </div>
 
               {/* Session Details */}
@@ -180,22 +189,30 @@ export default function SessionResumption({
                     <h6 className="alert-heading mb-2">Session Information</h6>
                     <div className="row g-2 small">
                       <div className="col-6">
-                        <strong>Session ID:</strong><br />
+                        <strong>Session ID:</strong>
+                        <br />
                         <code className="small">{existingSession.id}</code>
                       </div>
                       <div className="col-6">
-                        <strong>Started:</strong><br />
+                        <strong>Started:</strong>
+                        <br />
                         {new Date(existingSession.createdAt).toLocaleString()}
                       </div>
                       <div className="col-6">
-                        <strong>Status:</strong><br />
-                        <span className={`badge bg-${existingSession.status === 'ACTIVE' ? 'success' : 'secondary'}`}>
+                        <strong>Status:</strong>
+                        <br />
+                        <span
+                          className={`badge bg-${existingSession.status === "ACTIVE" ? "success" : "secondary"}`}
+                        >
                           {existingSession.status}
                         </span>
                       </div>
                       <div className="col-6">
-                        <strong>Assessment ID:</strong><br />
-                        <code className="small">{existingSession.assessmentId}</code>
+                        <strong>Assessment ID:</strong>
+                        <br />
+                        <code className="small">
+                          {existingSession.assessmentId}
+                        </code>
                       </div>
                     </div>
                   </div>
@@ -220,7 +237,7 @@ export default function SessionResumption({
                   <i className="bi bi-play-fill me-2"></i>
                   Resume Assessment
                 </button>
-                
+
                 <div className="row g-2">
                   <div className="col-6">
                     <button
@@ -247,8 +264,9 @@ export default function SessionResumption({
               <div className="alert alert-warning border-0 mt-4 mb-0">
                 <i className="bi bi-exclamation-triangle-fill me-2"></i>
                 <small>
-                  <strong>Note:</strong> Starting a new session will cancel your current one. 
-                  Your progress will be saved but you'll need to start over.
+                  <strong>Note:</strong> Starting a new session will cancel your
+                  current one. Your progress will be saved but you&apos;ll need
+                  to start over.
                 </small>
               </div>
             </div>
@@ -258,4 +276,3 @@ export default function SessionResumption({
     </div>
   );
 }
-

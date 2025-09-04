@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import SessionService from '../../../../lib/session-service';
+import { NextRequest, NextResponse } from "next/server";
+import SessionService from "../../../../lib/session-service";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Test session service operations
     const [activeSessions, sessionStats] = await Promise.all([
       SessionService.getActiveSessions(),
       SessionService.getSessionStats(),
     ]);
-    
+
     return NextResponse.json({
-      status: 'success',
-      message: 'Session service is working correctly',
+      status: "success",
+      message: "Session service is working correctly",
       timestamp: new Date().toISOString(),
       sessionService: {
         activeSessions: activeSessions.length,
@@ -19,21 +19,20 @@ export async function GET(request: NextRequest) {
         stats: sessionStats,
       },
       testResults: {
-        sessionService: '✅ Working',
-        getActiveSessions: '✅ Working',
-        getSessionStats: '✅ Working',
-      }
+        sessionService: "✅ Working",
+        getActiveSessions: "✅ Working",
+        getSessionStats: "✅ Working",
+      },
     });
-    
   } catch (error) {
-    console.error('Session service test failed:', error);
-    
+    console.error("Session service test failed:", error);
+
     return NextResponse.json(
-      { 
-        status: 'error', 
-        message: 'Session service test failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+      {
+        status: "error",
+        message: "Session service test failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -44,92 +43,98 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, data } = body;
-    
+
     switch (action) {
-      case 'createSession':
+      case "createSession":
         // Create a test session using the service
         const testSession = await SessionService.createSession({
           studentId: `test-student-service-${Date.now()}`,
-          assessmentId: 'test-assessment-service',
+          learnositySessionId: `test-learnosity-service-${Date.now()}`,
+          assessmentId: "test-assessment-service",
           expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
         });
-        
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Test session created successfully via service',
+          status: "success",
+          message: "Test session created successfully via service",
           session: testSession,
         });
-        
-      case 'getSessionProgress':
+
+      case "getSessionProgress":
         // Get session progress
-        const progress = await SessionService.getSessionProgress(data.sessionId);
-        
+        const progress = await SessionService.getSessionProgress(
+          data.sessionId
+        );
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Session progress retrieved successfully',
+          status: "success",
+          message: "Session progress retrieved successfully",
           progress,
         });
-        
-      case 'updateProgress':
+
+      case "updateProgress":
         // Update session progress
         const updatedSession = await SessionService.updateProgress(
           data.sessionId,
           data.currentQuestion,
           data.progress
         );
-        
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Session progress updated successfully',
+          status: "success",
+          message: "Session progress updated successfully",
           session: updatedSession,
         });
-        
-      case 'resumeSession':
+
+      case "resumeSession":
         // Resume a session
-        const resumedSession = await SessionService.resumeSession(data.sessionId);
-        
+        const resumedSession = await SessionService.resumeSession(
+          data.sessionId
+        );
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Session resumed successfully',
+          status: "success",
+          message: "Session resumed successfully",
           session: resumedSession,
         });
-        
-      case 'completeSession':
+
+      case "completeSession":
         // Complete a session
-        const completedSession = await SessionService.completeSession(data.sessionId);
-        
+        const completedSession = await SessionService.completeSession(
+          data.sessionId
+        );
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Session completed successfully',
+          status: "success",
+          message: "Session completed successfully",
           session: completedSession,
         });
-        
-      case 'cleanupExpired':
+
+      case "cleanupExpired":
         // Clean up expired sessions
         const cleanedCount = await SessionService.cleanupExpiredSessions();
-        
+
         return NextResponse.json({
-          status: 'success',
-          message: 'Expired sessions cleaned up successfully',
+          status: "success",
+          message: "Expired sessions cleaned up successfully",
           cleanedCount,
         });
-        
+
       default:
         return NextResponse.json(
-          { status: 'error', message: 'Invalid action' },
+          { status: "error", message: "Invalid action" },
           { status: 400 }
         );
     }
-    
   } catch (error) {
-    console.error('Session service test operation failed:', error);
-    
+    console.error("Session service test operation failed:", error);
+
     return NextResponse.json(
-      { 
-        status: 'error', 
-        message: 'Session service test operation failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+      {
+        status: "error",
+        message: "Session service test operation failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

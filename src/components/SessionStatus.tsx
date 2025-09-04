@@ -8,7 +8,6 @@ interface SessionStatusProps {
   studentId: string;
 }
 
-
 export default function SessionStatus({
   sessionId,
   studentId,
@@ -20,7 +19,7 @@ export default function SessionStatus({
   const validateSession = async () => {
     try {
       const response = await fetch(`/api/sessions?studentId=${studentId}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch session status");
       }
@@ -32,7 +31,9 @@ export default function SessionStatus({
         throw new Error("Session not found");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load session status");
+      setError(
+        err instanceof Error ? err.message : "Failed to load session status"
+      );
       console.error("Error validating session:", err);
     } finally {
       setIsLoading(false);
@@ -44,11 +45,13 @@ export default function SessionStatus({
     validateSession();
   }, [sessionId, studentId]);
 
-
   if (isLoading) {
     return (
       <div className="session-status-loading">
-        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+        <div
+          className="spinner-border spinner-border-sm text-primary me-2"
+          role="status"
+        >
           <span className="visually-hidden">Loading...</span>
         </div>
         <small className="text-muted">Loading session status...</small>
@@ -65,20 +68,16 @@ export default function SessionStatus({
     );
   }
 
-
   return (
     <div className="session-status">
       <div className="row align-items-center g-2">
         {/* Session ID Only */}
         <div className="col">
           <div className="d-flex align-items-center">
-            <small className="text-muted">
-              Session ID: {sessionId}
-            </small>
+            <small className="text-muted">Session ID: {sessionId}</small>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

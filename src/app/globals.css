@@ -245,12 +245,12 @@ a {
   .assessment-container {
     padding: 0 15px !important;
   }
-  
+
   #learnosity_assess,
   #learnosity_assess * {
     font-size: 14px !important;
   }
-  
+
   .lrn-btn,
   .lrn-button {
     padding: 8px 12px !important;
@@ -263,4 +263,3 @@ a {
     color-scheme: dark;
   }
 }
-

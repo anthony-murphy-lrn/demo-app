@@ -66,4 +66,3 @@ export interface LearnosityResponse {
   };
   timestamp: string;
 }
-

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
 import { learnosityService } from "@/lib/learnosity";
 import { learnosityConfig } from "@/lib/config";
-import { STATUS_CODES, ERROR_MESSAGES } from "@/constants";
+import { STATUS_CODES } from "@/constants";
 import {
   validateRequestBody,
   validateIdFormat,
@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
-    const bodyValidation = validateRequestBody(body, ["sessionId", "studentId"]);
+    const bodyValidation = validateRequestBody(body, [
+      "sessionId",
+      "studentId",
+    ]);
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) return validationError;
 
@@ -93,9 +96,9 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (learnosityError: unknown) {
-      console.error('Learnosity route - error details:', learnosityError);
+      console.error("Learnosity route - error details:", learnosityError);
       if (learnosityError instanceof Error) {
-        console.error('Learnosity route - error stack:', learnosityError.stack);
+        console.error("Learnosity route - error stack:", learnosityError.stack);
         return createErrorResponse(
           `Learnosity error: ${learnosityError.message}`,
           STATUS_CODES.INTERNAL_SERVER_ERROR,

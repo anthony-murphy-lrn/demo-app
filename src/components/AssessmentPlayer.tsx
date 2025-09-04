@@ -24,20 +24,20 @@ export default function AssessmentPlayer({
 }: AssessmentPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [learnosityConfig, setLearnosityConfig] = useState<any>(null);
+  const [, setLearnosityConfig] = useState<any>(null);
   const itemsAppRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize Learnosity Items API
   useEffect(() => {
     let isInitialized = false;
-    
+
     const initializeAssessment = async () => {
       if (isInitialized) {
         console.log("Assessment already initialized, skipping...");
         return;
       }
-      
+
       try {
         setIsLoading(true);
         setError(null);
@@ -59,14 +59,17 @@ export default function AssessmentPlayer({
         }
 
         const data: LearnosityResponse = await response.json();
-        
+
         if (!data.success) {
           throw new Error("Failed to initialize assessment session");
         }
 
         const learnosityConfig = data.data.learnosity;
         console.log("Learnosity config received:", learnosityConfig);
-        console.log("Activity ID being used:", learnosityConfig.itemsRequest.activity_id);
+        console.log(
+          "Activity ID being used:",
+          learnosityConfig.itemsRequest.activity_id
+        );
         setLearnosityConfig(learnosityConfig);
 
         // Load Learnosity Items API script if not already loaded
@@ -77,7 +80,9 @@ export default function AssessmentPlayer({
         // Wait for the container to be available before initializing
         const waitForContainer = () => {
           if (containerRef.current && !isInitialized) {
-            console.log("Container is now available, initializing Items API...");
+            console.log(
+              "Container is now available, initializing Items API..."
+            );
             isInitialized = true;
             initializeItemsAPI(learnosityConfig.itemsRequest);
           } else if (!isInitialized) {
@@ -88,7 +93,8 @@ export default function AssessmentPlayer({
 
         waitForContainer();
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load assessment";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load assessment";
         setError(errorMessage);
         onError?.(errorMessage);
         console.error("Error initializing assessment:", err);
@@ -98,7 +104,7 @@ export default function AssessmentPlayer({
     };
 
     initializeAssessment();
-    
+
     // Cleanup function
     return () => {
       isInitialized = true;
@@ -138,53 +144,71 @@ export default function AssessmentPlayer({
       console.log("Items API already initialized, skipping...");
       return;
     }
-    
+
     console.log("initializeItemsAPI called with config:", config);
     console.log("containerRef.current:", containerRef.current);
     console.log("window.LearnosityItems:", window.LearnosityItems);
-    
+
     if (!containerRef.current || !window.LearnosityItems) {
-      console.error("Missing container or LearnosityItems:", { 
-        container: !!containerRef.current, 
-        learnosity: !!window.LearnosityItems 
+      console.error("Missing container or LearnosityItems:", {
+        container: !!containerRef.current,
+        learnosity: !!window.LearnosityItems,
       });
       return;
     }
 
     try {
       console.log("About to initialize Learnosity Items API...");
-      
+
       console.log("Learnosity config being passed:", config);
-      
+
       // Initialize the Items API
-      console.log("Calling LearnosityItems.init with config:", JSON.stringify(config, null, 2));
-      console.log("Available LearnosityItems methods:", Object.getOwnPropertyNames(window.LearnosityItems));
-      console.log("LearnosityItems.init function:", typeof window.LearnosityItems.init);
-      
+      console.log(
+        "Calling LearnosityItems.init with config:",
+        JSON.stringify(config, null, 2)
+      );
+      console.log(
+        "Available LearnosityItems methods:",
+        Object.getOwnPropertyNames(window.LearnosityItems)
+      );
+      console.log(
+        "LearnosityItems.init function:",
+        typeof window.LearnosityItems.init
+      );
+
       // Verify required configuration structure
       if (!config.security || !config.request) {
-        console.error("Missing required Learnosity configuration structure. Expected { security: {...}, request: {...} }");
+        console.error(
+          "Missing required Learnosity configuration structure. Expected { security: {...}, request: {...} }"
+        );
         return;
       }
-      
+
       // Verify required security fields
-      const requiredSecurityFields = ['consumer_key', 'domain', 'signature'];
-      const missingSecurityFields = requiredSecurityFields.filter(field => !config.security[field]);
+      const requiredSecurityFields = ["consumer_key", "domain", "signature"];
+      const missingSecurityFields = requiredSecurityFields.filter(
+        field => !config.security[field]
+      );
       if (missingSecurityFields.length > 0) {
-        console.error("Missing required security fields:", missingSecurityFields);
+        console.error(
+          "Missing required security fields:",
+          missingSecurityFields
+        );
       } else {
         console.log("All required security fields are present");
       }
-      
+
       // Verify required request fields
-      const requiredRequestFields = ['user_id', 'session_id'];
-      const missingRequestFields = requiredRequestFields.filter(field => !config.request[field]);
+      const requiredRequestFields = ["user_id", "session_id"];
+      const missingRequestFields = requiredRequestFields.filter(
+        field => !config.request[field]
+      );
       if (missingRequestFields.length > 0) {
         console.error("Missing required request fields:", missingRequestFields);
       } else {
         console.log("All required request fields are present");
       }
-      
+
       // Try the standard initialization first
       try {
         itemsAppRef.current = window.LearnosityItems.init(config, {
@@ -209,11 +233,11 @@ export default function AssessmentPlayer({
             onError?.("Assessment submission failed");
           },
         });
-        
+
         console.log("Standard init successful:", itemsAppRef.current);
       } catch (initError) {
         console.error("Standard init failed:", initError);
-        
+
         // Try alternative initialization method
         try {
           console.log("Trying alternative initialization method...");
@@ -224,33 +248,49 @@ export default function AssessmentPlayer({
           throw altInitError;
         }
       }
-      
+
       console.log("Learnosity Items API initialized:", itemsAppRef.current);
-      
+
       // Check if there are any Learnosity errors
-      if (window.LearnosityItems.errors && window.LearnosityItems.errors.length > 0) {
+      if (
+        window.LearnosityItems.errors &&
+        window.LearnosityItems.errors.length > 0
+      ) {
         console.error("Learnosity errors:", window.LearnosityItems.errors);
       }
-      
+
       // Check for errors immediately after initialization
       setTimeout(() => {
-        if (window.LearnosityItems.errors && window.LearnosityItems.errors.length > 0) {
-          console.error("Learnosity errors after 1 second:", window.LearnosityItems.errors);
+        if (
+          window.LearnosityItems.errors &&
+          window.LearnosityItems.errors.length > 0
+        ) {
+          console.error(
+            "Learnosity errors after 1 second:",
+            window.LearnosityItems.errors
+          );
         }
       }, 1000);
-      
+
       // Add a timeout to check if the assessment loads
       setTimeout(() => {
-        if (containerRef.current && containerRef.current.children.length === 0) {
+        if (
+          containerRef.current &&
+          containerRef.current.children.length === 0
+        ) {
           console.warn("Assessment container is still empty after 5 seconds");
-          console.warn("This might indicate the activity_id doesn't exist or there's a configuration issue");
+          console.warn(
+            "This might indicate the activity_id doesn't exist or there's a configuration issue"
+          );
           console.warn("Container HTML:", containerRef.current.innerHTML);
-          
+
           // Check if there are any network requests to Learnosity
           console.warn("Checking for Learnosity network requests...");
-          const performanceEntries = performance.getEntriesByType('resource');
-          const learnosityRequests = performanceEntries.filter(entry => 
-            entry.name.includes('learnosity.com') || entry.name.includes('items.learnosity.com')
+          const performanceEntries = performance.getEntriesByType("resource");
+          const learnosityRequests = performanceEntries.filter(
+            entry =>
+              entry.name.includes("learnosity.com") ||
+              entry.name.includes("items.learnosity.com")
           );
           console.warn("Learnosity network requests:", learnosityRequests);
         }
@@ -263,51 +303,54 @@ export default function AssessmentPlayer({
   };
 
   // Force containment of Learnosity content
-  const forceContainment = () => {
-    if (!containerRef.current) return;
-    
-    console.log("Forcing containment of Learnosity content...");
-    
-    // Force the container to respect viewport boundaries
-    const container = containerRef.current;
-    container.style.maxWidth = '100vw';
-    container.style.width = '100vw';
-    container.style.overflowX = 'auto';
-    container.style.overflowY = 'visible';
-    container.style.position = 'relative';
-    container.style.left = '0';
-    container.style.right = '0';
-    container.style.transform = 'translateX(0)';
-    
-    // Force all child elements to respect boundaries
-    const allElements = container.querySelectorAll('*');
-    allElements.forEach((element: any) => {
-      if (element.style) {
-        element.style.maxWidth = '100vw';
-        element.style.overflowX = 'hidden';
-        element.style.boxSizing = 'border-box';
-      }
-    });
-    
-    // Monitor for any elements that might overflow
-    const observer = new MutationObserver(() => {
-      forceContainment();
-    });
-    
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['style', 'class']
-    });
-    
-    console.log("Containment enforced and monitoring active");
-  };
+  // const _forceContainment = () => {
+  //   if (!containerRef.current) return;
+
+  //   console.log("Forcing containment of Learnosity content...");
+
+  //   // Force the container to respect viewport boundaries
+  //   const container = containerRef.current;
+  //   container.style.maxWidth = "100vw";
+  //   container.style.width = "100vw";
+  //   container.style.overflowX = "auto";
+  //   container.style.overflowY = "visible";
+  //   container.style.position = "relative";
+  //   container.style.left = "0";
+  //   container.style.right = "0";
+  //   container.style.transform = "translateX(0)";
+
+  //   // Force all child elements to respect boundaries
+  //   const allElements = container.querySelectorAll("*");
+  //   allElements.forEach((element: any) => {
+  //     if (element.style) {
+  //       element.style.maxWidth = "100vw";
+  //       element.style.overflowX = "hidden";
+  //       element.style.boxSizing = "border-box";
+  //     }
+  //   });
+
+  //   // Monitor for any elements that might overflow
+  //   const observer = new MutationObserver(() => {
+  //     // _forceContainment();
+  //   });
+
+  //   observer.observe(container, {
+  //     childList: true,
+  //     subtree: true,
+  //     attributes: true,
+  //     attributeFilter: ["style", "class"],
+  //   });
+
+  //   console.log("Containment enforced and monitoring active");
+  // };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (itemsAppRef.current && typeof itemsAppRef.current.destroy === "function") {
+      if (
+        itemsAppRef.current &&
+        typeof itemsAppRef.current.destroy === "function"
+      ) {
         itemsAppRef.current.destroy();
       }
     };
@@ -321,7 +364,9 @@ export default function AssessmentPlayer({
             <span className="visually-hidden">Loading...</span>
           </div>
           <h5 className="text-muted">Loading Assessment...</h5>
-          <p className="text-muted small">Please wait while we prepare your assessment</p>
+          <p className="text-muted small">
+            Please wait while we prepare your assessment
+          </p>
         </div>
       </div>
     );
@@ -350,10 +395,13 @@ export default function AssessmentPlayer({
   return (
     <div className="container-fluid p-0">
       {/* Assessment Content - Full Width */}
-      <div ref={containerRef} id="learnosity_assess" className="assessment-container w-100">
+      <div
+        ref={containerRef}
+        id="learnosity_assess"
+        className="assessment-container w-100"
+      >
         {/* Learnosity Items API will render here */}
       </div>
     </div>
   );
 }
-

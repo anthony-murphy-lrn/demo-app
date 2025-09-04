@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
-import { STATUS_CODES, ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants";
+import { STATUS_CODES, SUCCESS_MESSAGES } from "@/constants";
 import { CreateSessionRequest, UpdateSessionRequest } from "@/types";
 import {
   validateQueryParams,
   validateRequestBody,
   validateIdFormat,
-  validateNumericRange,
   validateSessionStatus,
   combineValidationResults,
 } from "@/utils/validation";
-import { generateUniqueSessionId, generateLearnositySessionId } from "@/utils/session-id-generator";
+import { generateLearnositySessionId } from "@/utils/session-id-generator";
 import {
   createSuccessResponse,
-  createErrorResponse,
   handleValidationErrors,
-  handleDatabaseError,
   handleNotFoundError,
   handleGenericError,
 } from "@/utils/error-handler";
@@ -38,12 +35,12 @@ export async function GET(request: NextRequest) {
 
     // Find the most recent active session for the student
     const session = await prisma.session.findFirst({
-      where: { 
+      where: {
         studentId,
-        status: "ACTIVE"
+        status: "ACTIVE",
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
       include: {
         results: true,
@@ -95,9 +92,9 @@ export async function POST(request: NextRequest) {
 
     // Check if student already has an active session
     const existingActiveSession = await prisma.session.findFirst({
-      where: { 
+      where: {
         studentId: body.studentId,
-        status: "ACTIVE"
+        status: "ACTIVE",
       },
     });
 
@@ -106,18 +103,20 @@ export async function POST(request: NextRequest) {
       // 1. Return an error (current behavior)
       // 2. Automatically expire the old session and create a new one
       // 3. Allow the student to choose what to do
-      
+
       // For now, let's automatically expire the old session and create a new one
       // This provides a better user experience
       await prisma.session.update({
         where: { id: existingActiveSession.id },
-        data: { 
+        data: {
           status: "EXPIRED",
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
       });
-      
-      console.log(`🔄 Expired previous active session ${existingActiveSession.id} for student ${body.studentId}`);
+
+      console.log(
+        `🔄 Expired previous active session ${existingActiveSession.id} for student ${body.studentId}`
+      );
     }
 
     // Generate Learnosity session ID
@@ -174,7 +173,8 @@ export async function PUT(request: NextRequest) {
 
     if (validations.length > 0) {
       const combinedValidation = combineValidationResults(...validations);
-      const combinedValidationError = handleValidationErrors(combinedValidation);
+      const combinedValidationError =
+        handleValidationErrors(combinedValidation);
       if (combinedValidationError) return combinedValidationError;
     }
 

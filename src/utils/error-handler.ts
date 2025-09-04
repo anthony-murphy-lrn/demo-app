@@ -137,7 +137,7 @@ export function handleNotFoundError(resource: string): NextResponse<ApiError> {
 export function handleRateLimitError(): NextResponse<ApiError> {
   return createErrorResponse(
     "Too many requests. Please try again later.",
-    STATUS_CODES.TOO_MANY_REQUESTS || 429,
+    429, // TOO_MANY_REQUESTS not available in current STATUS_CODES
     undefined,
     "RATE_LIMIT_EXCEEDED"
   );
@@ -225,4 +225,3 @@ export function withErrorHandling<T extends any[], R>(
     }
   };
 }
-

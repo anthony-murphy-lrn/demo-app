@@ -1,5 +1,5 @@
 import Learnosity from "learnosity-sdk-nodejs";
-import { learnosityConfig } from "./config";
+import { learnosityConfig, sessionConfig } from "./config";
 import { LearnositySessionConfig, LearnosityResponse } from "@/types";
 
 // Learnosity API integration utilities using official SDK
@@ -27,7 +27,7 @@ export class LearnosityService {
     try {
       // Use the SDK to generate a session request
       const result = this.learnosity.init(
-        'items', // API type
+        "items", // API type
         {
           consumer_key: this.consumerKey,
           domain: this.domain,
@@ -47,7 +47,7 @@ export class LearnosityService {
         ...result.request,
       };
     } catch (error) {
-      console.error('LearnosityService - initializeSession error:', error);
+      console.error("LearnosityService - initializeSession error:", error);
       throw error;
     }
   }
@@ -55,12 +55,13 @@ export class LearnosityService {
   // Generate security configuration for media assets
   generateSecurityConfig(sessionId: string): Record<string, any> {
     try {
-      const timestamp = new Date().toISOString();
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+      const expiresAt = new Date(
+        Date.now() + sessionConfig.learnosityExpiresMinutes * 60 * 1000
+      ).toISOString();
 
       // Use the SDK to generate a security request
       const result = this.learnosity.init(
-        'security', // API type
+        "security", // API type
         {
           consumer_key: this.consumerKey,
           domain: this.domain,
@@ -76,13 +77,13 @@ export class LearnosityService {
       // For security config, we want the security part
       return result.security || result;
     } catch (error) {
-      console.error('LearnosityService - generateSecurityConfig error:', error);
+      console.error("LearnosityService - generateSecurityConfig error:", error);
       throw error;
     }
   }
 
   // Validate Learnosity response signature
-  validateResponse(response: LearnosityResponse): boolean {
+  validateResponse(_response: LearnosityResponse): boolean {
     try {
       // For now, return true as we're not implementing signature validation
       // This can be implemented later when needed
@@ -100,18 +101,22 @@ export class LearnosityService {
     activityId: string
   ): Record<string, any> {
     try {
+      // Get formatted expires time
+      const expiresFormatted = this.formatExpiresTime();
+
       // Use the SDK to generate an items config request
       const result = this.learnosity.init(
-        'items', // API type
+        "items", // API type
         {
           consumer_key: this.consumerKey,
           domain: this.domain,
+          expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
         {
           user_id: userId,
           session_id: sessionId,
-          activity_id: activityId,           // This is for reporting/comparison
+          activity_id: activityId, // This is for reporting/comparison
           rendering_type: "assess",
           type: "submit_practice",
           name: "Items API Quickstart",
@@ -124,23 +129,23 @@ export class LearnosityService {
               skip_submit_confirmation: false,
               warning_on_change: false,
               auto_save: {
-                save_interval_duration: 500
-              }
+                save_interval_duration: 500,
+              },
             },
             annotations: true,
             time: {
               max_time: 1500,
               limit_type: "soft",
-              warning_time: 120
+              warning_time: 120,
             },
             configuration: {
               shuffle_items: false,
               idle_timeout: {
                 interval: 300,
-                countdown_time: 60
-              }
-            }
-          }
+                countdown_time: 60,
+              },
+            },
+          },
         }
       );
 
@@ -151,7 +156,7 @@ export class LearnosityService {
         request: result.request,
       };
     } catch (error) {
-      console.error('LearnosityService - generateItemsConfig error:', error);
+      console.error("LearnosityService - generateItemsConfig error:", error);
       throw error;
     }
   }
@@ -163,23 +168,27 @@ export class LearnosityService {
     activityId: string
   ): Record<string, any> {
     try {
+      // Get formatted expires time
+      const expiresFormatted = this.formatExpiresTime();
+
       // Use the correct SDK init() method with 4 parameters
       const result = this.learnosity.init(
-        'items', // API type
+        "items", // API type
         {
           consumer_key: this.consumerKey,
           domain: this.domain,
+          expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
         {
           user_id: userId,
           session_id: sessionId,
-          activity_template_id: activityId,  // This is what Learnosity needs to load the assessment
-          activity_id: activityId,           // This is for reporting/comparison
-          rendering_type: 'assess',
-          type: 'submit_practice',
+          activity_template_id: activityId, // This is what Learnosity needs to load the assessment
+          activity_id: activityId, // This is for reporting/comparison
+          rendering_type: "assess",
+          type: "submit_practice",
           name: "Items API Quickstart",
-          state: 'initial',
+          state: "initial",
           config: {
             regions: "main",
             navigation: {
@@ -191,23 +200,23 @@ export class LearnosityService {
               skip_submit_confirmation: false,
               warning_on_change: false,
               auto_save: {
-                save_interval_duration: 500
-              }
+                save_interval_duration: 500,
+              },
             },
             annotations: true,
             time: {
               max_time: 1500,
               limit_type: "soft",
-              warning_time: 120
+              warning_time: 120,
             },
             configuration: {
               shuffle_items: false,
               idle_timeout: {
                 interval: 300,
-                countdown_time: 60
-              }
-            }
-          }
+                countdown_time: 60,
+              },
+            },
+          },
         }
       );
 
@@ -218,7 +227,7 @@ export class LearnosityService {
         request: result.request,
       };
     } catch (error) {
-      console.error('LearnosityService - generateItemsRequest error:', error);
+      console.error("LearnosityService - generateItemsRequest error:", error);
       throw error;
     }
   }
@@ -230,12 +239,16 @@ export class LearnosityService {
     activityId: string
   ): Record<string, any> {
     try {
+      // Get formatted expires time
+      const expiresFormatted = this.formatExpiresTime();
+
       // Use the correct SDK init() method with 4 parameters
       const result = this.learnosity.init(
-        'data', // API type
+        "data", // API type
         {
           consumer_key: this.consumerKey,
           domain: this.domain,
+          expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
         {
@@ -252,9 +265,21 @@ export class LearnosityService {
         request: result.request,
       };
     } catch (error) {
-      console.error('LearnosityService - generateDataRequest error:', error);
+      console.error("LearnosityService - generateDataRequest error:", error);
       throw error;
     }
+  }
+
+  // Helper method to format expires time in Learnosity format (YYYYMMDD-HHMM)
+  private formatExpiresTime(): string {
+    const expiresDate = new Date(
+      Date.now() + sessionConfig.learnosityExpiresMinutes * 60 * 1000
+    );
+    return expiresDate
+      .toISOString()
+      .slice(0, 16)
+      .replace(/[-T:]/g, "")
+      .replace(/(\d{8})(\d{4})/, "$1-$2");
   }
 
   // Check if Learnosity credentials are configured

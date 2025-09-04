@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LandingPage from "@/components/LandingPage";
 import SessionResumption from "@/components/SessionResumption";
@@ -8,7 +8,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { Session } from "@/types";
 
 export default function Home() {
-  const [currentSession, setCurrentSession] = useState<Session | null>(null);
+  const [, setCurrentSession] = useState<Session | null>(null);
   const [studentId, setStudentId] = useState<string>("");
   const router = useRouter();
 
@@ -33,9 +33,11 @@ export default function Home() {
 
       const data = await response.json();
       setCurrentSession(data.data.session); // API returns data.data.session
-      
+
       // Navigate to assessment page with session details
-      router.push(`/assessment?studentId=${newStudentId}&sessionId=${data.data.session.id}`);
+      router.push(
+        `/assessment?studentId=${newStudentId}&sessionId=${data.data.session.id}`
+      );
     } catch (error) {
       console.error("Error starting assessment:", error);
       throw error;

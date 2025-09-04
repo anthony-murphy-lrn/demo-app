@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
-import { STATUS_CODES, ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants";
+import { STATUS_CODES, SUCCESS_MESSAGES } from "@/constants";
 import { CreateResultRequest } from "@/types";
 import {
   validateQueryParams,
@@ -63,10 +63,7 @@ export async function POST(request: NextRequest) {
     const body: CreateResultRequest = await request.json();
 
     // Validate request body
-    const bodyValidation = validateRequestBody(body, [
-      "sessionId",
-      "response",
-    ]);
+    const bodyValidation = validateRequestBody(body, ["sessionId", "response"]);
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) return validationError;
 
@@ -100,12 +97,12 @@ export async function POST(request: NextRequest) {
 
     // Create new result (no questionId needed)
     const result = await prisma.assessmentResult.create({
-              data: {
-          sessionId: body.sessionId,
-          response: body.response,
-          score: body.score,
-          timeSpent: body.timeSpent,
-        },
+      data: {
+        sessionId: body.sessionId,
+        response: body.response,
+        score: body.score,
+        timeSpent: body.timeSpent,
+      },
     });
 
     // Get total results count for this session
@@ -147,7 +144,8 @@ export async function PUT(request: NextRequest) {
     // Validate response data if provided
     if (body.response !== undefined) {
       const responseValidation = validateJsonData(body.response, "response");
-      const responseValidationError = handleValidationErrors(responseValidation);
+      const responseValidationError =
+        handleValidationErrors(responseValidation);
       if (responseValidationError) return responseValidationError;
     }
 

@@ -26,13 +26,16 @@ export default function AssessmentPage() {
 
         // Validate required parameters
         if (!studentId) {
-          console.log("Student ID not found in URL params:", { studentId, sessionId });
+          console.log("Student ID not found in URL params:", {
+            studentId,
+            sessionId,
+          });
           throw new Error("Student ID is required");
         }
 
         // Fetch session details
         const response = await fetch(`/api/sessions?studentId=${studentId}`);
-        
+
         if (!response.ok) {
           throw new Error("Failed to load session");
         }
@@ -45,12 +48,15 @@ export default function AssessmentPage() {
         }
 
         if (sessionData.status === "EXPIRED") {
-          throw new Error("Session has expired. Please start a new assessment.");
+          throw new Error(
+            "Session has expired. Please start a new assessment."
+          );
         }
 
         setSession(sessionData);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load assessment";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load assessment";
         setError(errorMessage);
         console.error("Error loading session:", err);
       } finally {
@@ -64,7 +70,7 @@ export default function AssessmentPage() {
   const handleAssessmentComplete = async (results: any) => {
     try {
       console.log("Assessment completed:", results);
-      
+
       // Update session status to completed
       if (session) {
         await fetch("/api/sessions", {
@@ -72,10 +78,10 @@ export default function AssessmentPage() {
           headers: {
             "Content-Type": "application/json",
           },
-                  body: JSON.stringify({
-          sessionId: session.id,
-          status: "COMPLETED",
-        }),
+          body: JSON.stringify({
+            sessionId: session.id,
+            status: "COMPLETED",
+          }),
         });
       }
 
@@ -100,7 +106,9 @@ export default function AssessmentPage() {
             <span className="visually-hidden">Loading...</span>
           </div>
           <h5 className="text-muted">Loading Assessment...</h5>
-          <p className="text-muted small">Please wait while we prepare your assessment</p>
+          <p className="text-muted small">
+            Please wait while we prepare your assessment
+          </p>
         </div>
       </div>
     );
@@ -143,10 +151,7 @@ export default function AssessmentPage() {
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
             <strong>No Session Found</strong>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => router.push("/")}
-          >
+          <button className="btn btn-primary" onClick={() => router.push("/")}>
             <i className="bi bi-house me-2"></i>
             Return to Home
           </button>
@@ -157,14 +162,14 @@ export default function AssessmentPage() {
 
   return (
     <ErrorBoundary>
-      <div className="assessment-page" style={{ maxWidth: '100vw', overflow: 'hidden' }}>
+      <div
+        className="assessment-page"
+        style={{ maxWidth: "100vw", overflow: "hidden" }}
+      >
         {/* Session Status Header */}
         <div className="bg-white border-bottom py-2">
           <div className="container">
-            <SessionStatus
-              sessionId={session.id}
-              studentId={studentId}
-            />
+            <SessionStatus sessionId={session.id} studentId={studentId} />
           </div>
         </div>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface LandingPageProps {
   onStartAssessment: (studentId: string) => void;
@@ -11,7 +10,7 @@ export default function LandingPage({ onStartAssessment }: LandingPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [studentId, setStudentId] = useState("");
-  const router = useRouter();
+  // const _router = useRouter();
 
   const handleStartAssessment = async () => {
     if (!studentId.trim()) {
@@ -50,7 +49,7 @@ export default function LandingPage({ onStartAssessment }: LandingPageProps) {
                   id="studentId"
                   placeholder="Enter your Student ID (e.g., student123)"
                   value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  onChange={e => setStudentId(e.target.value)}
                   disabled={isLoading}
                   required
                 />
@@ -100,4 +99,3 @@ export default function LandingPage({ onStartAssessment }: LandingPageProps) {
     </div>
   );
 }
-

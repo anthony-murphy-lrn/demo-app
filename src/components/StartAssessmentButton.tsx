@@ -29,7 +29,9 @@ export default function StartAssessmentButton({
     try {
       await onStart();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start assessment");
+      setError(
+        err instanceof Error ? err.message : "Failed to start assessment"
+      );
       console.error("Error starting assessment:", err);
     } finally {
       setIsLoading(false);
@@ -43,7 +45,7 @@ export default function StartAssessmentButton({
       md: "btn",
       lg: "btn-lg",
     };
-    
+
     return `${baseClasses} ${sizeClasses[size]} ${className}`.trim();
   };
 
@@ -87,4 +89,3 @@ export default function StartAssessmentButton({
     </div>
   );
 }
-

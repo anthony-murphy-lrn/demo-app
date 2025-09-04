@@ -277,21 +277,25 @@ This project is for demonstration purposes. Please refer to Learnosity's terms o
 ### Common Issues
 
 **Database Connection Errors**
+
 - Ensure the database file exists and is writable
 - Check the `DATABASE_URL` environment variable
 - Run `npm run db:push` to initialize the database
 
 **Learnosity Integration Issues**
+
 - Verify all Learnosity environment variables are set correctly
 - Check that your Learnosity credentials are valid
 - Ensure the activity ID exists in your Learnosity account
 
 **Session Not Resuming**
+
 - Check if the session has expired (default: 60 minutes)
 - Verify the session exists in the database
 - Check browser console for JavaScript errors
 
 **Assessment Not Loading**
+
 - Check the browser console for Learnosity API errors
 - Verify network connectivity
 - Ensure Learnosity scripts are loading properly

@@ -73,34 +73,46 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <div className="card-body p-5 text-center">
                   {/* Error Icon */}
                   <div className="mb-4">
-                    <i className="bi bi-exclamation-triangle-fill text-danger" style={{ fontSize: "4rem" }}></i>
+                    <i
+                      className="bi bi-exclamation-triangle-fill text-danger"
+                      style={{ fontSize: "4rem" }}
+                    ></i>
                   </div>
 
                   {/* Error Title */}
-                  <h2 className="h3 fw-bold text-dark mb-3">Something went wrong</h2>
-                  
+                  <h2 className="h3 fw-bold text-dark mb-3">
+                    Something went wrong
+                  </h2>
+
                   {/* Error Message */}
                   <p className="text-muted mb-4">
-                    We encountered an unexpected error. Please try again or contact support if the problem persists.
+                    We encountered an unexpected error. Please try again or
+                    contact support if the problem persists.
                   </p>
 
                   {/* Error Details (Development Only) */}
-                  {process.env.NODE_ENV === "development" && this.state.error && (
-                    <div className="alert alert-danger text-start mb-4">
-                      <h6 className="alert-heading">Error Details (Development)</h6>
-                      <p className="mb-2">
-                        <strong>Message:</strong> {this.state.error.message}
-                      </p>
-                      {this.state.error.stack && (
-                        <details>
-                          <summary>Stack Trace</summary>
-                          <pre className="small mt-2 mb-0" style={{ whiteSpace: "pre-wrap" }}>
-                            {this.state.error.stack}
-                          </pre>
-                        </details>
-                      )}
-                    </div>
-                  )}
+                  {process.env.NODE_ENV === "development" &&
+                    this.state.error && (
+                      <div className="alert alert-danger text-start mb-4">
+                        <h6 className="alert-heading">
+                          Error Details (Development)
+                        </h6>
+                        <p className="mb-2">
+                          <strong>Message:</strong> {this.state.error.message}
+                        </p>
+                        {this.state.error.stack && (
+                          <details>
+                            <summary>Stack Trace</summary>
+                            <pre
+                              className="small mt-2 mb-0"
+                              style={{ whiteSpace: "pre-wrap" }}
+                            >
+                              {this.state.error.stack}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    )}
 
                   {/* Action Buttons */}
                   <div className="d-grid gap-2">
@@ -111,7 +123,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                       <i className="bi bi-arrow-clockwise me-2"></i>
                       Try Again
                     </button>
-                    
+
                     <button
                       className="btn btn-outline-secondary"
                       onClick={this.handleReload}
@@ -124,7 +136,8 @@ export default class ErrorBoundary extends Component<Props, State> {
                   {/* Support Information */}
                   <div className="mt-4">
                     <small className="text-muted">
-                      If this problem continues, please contact support with the error details above.
+                      If this problem continues, please contact support with the
+                      error details above.
                     </small>
                   </div>
                 </div>
@@ -176,11 +189,14 @@ export function ErrorDisplay({
         <div className="flex-grow-1">
           <h6 className="alert-heading mb-2">An error occurred</h6>
           <p className="mb-2">{error.message}</p>
-          
+
           {showDetails && error.stack && (
             <details className="mb-3">
               <summary>Error Details</summary>
-              <pre className="small mt-2 mb-0" style={{ whiteSpace: "pre-wrap" }}>
+              <pre
+                className="small mt-2 mb-0"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {error.stack}
               </pre>
             </details>
@@ -211,4 +227,3 @@ export function ErrorDisplay({
     </div>
   );
 }
-

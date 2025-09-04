@@ -1,5 +1,9 @@
-import { prisma } from './database';
-import type { Session, AssessmentResult, SessionStatus } from '../generated/prisma';
+import { prisma } from "./database";
+import type {
+  Session,
+  AssessmentResult,
+  SessionStatus,
+} from "../generated/prisma";
 
 // Type definitions for database models
 export type { Session, AssessmentResult, SessionStatus };
@@ -30,8 +34,9 @@ export class SessionModel {
     return prisma.session.create({
       data: {
         ...data,
-        learnositySessionId: data.learnositySessionId || `session_${Date.now()}_${data.studentId}`,
-        status: 'ACTIVE',
+        learnositySessionId:
+          data.learnositySessionId || `session_${Date.now()}_${data.studentId}`,
+        status: "ACTIVE",
       },
     });
   }
@@ -51,14 +56,16 @@ export class SessionModel {
   static async findByStudentId(studentId: string): Promise<Session | null> {
     return prisma.session.findFirst({
       where: { studentId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
   /**
    * Find session by Learnosity session ID
    */
-  static async findByLearnositySessionId(learnositySessionId: string): Promise<Session | null> {
+  static async findByLearnositySessionId(
+    learnositySessionId: string
+  ): Promise<Session | null> {
     return prisma.session.findFirst({
       where: { learnositySessionId },
     });
@@ -67,7 +74,10 @@ export class SessionModel {
   /**
    * Update session status
    */
-  static async updateStatus(id: string, status: SessionStatus): Promise<Session> {
+  static async updateStatus(
+    id: string,
+    status: SessionStatus
+  ): Promise<Session> {
     return prisma.session.update({
       where: { id },
       data: {
@@ -84,7 +94,7 @@ export class SessionModel {
     return prisma.session.update({
       where: { id },
       data: {
-        status: 'COMPLETED',
+        status: "COMPLETED",
         updatedAt: new Date(),
       },
     });
@@ -106,7 +116,9 @@ export class SessionModel {
     return {
       ...session,
       isExpired: session.expiresAt ? new Date() > session.expiresAt : false,
-      isActive: session.status === 'ACTIVE' && !(session.expiresAt ? new Date() > session.expiresAt : false),
+      isActive:
+        session.status === "ACTIVE" &&
+        !(session.expiresAt ? new Date() > session.expiresAt : false),
       // Note: Progress is now managed by Learnosity, not stored locally
       progressPercentage: 0,
     };
@@ -118,11 +130,8 @@ export class SessionModel {
   static async findActive(): Promise<Session[]> {
     return prisma.session.findMany({
       where: {
-        status: 'ACTIVE',
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        status: "ACTIVE",
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });
   }
@@ -134,12 +143,12 @@ export class SessionModel {
     return prisma.session.findMany({
       where: {
         OR: [
-          { status: 'EXPIRED' },
+          { status: "EXPIRED" },
           {
             expiresAt: { lt: new Date() },
           },
           {
-            status: 'ACTIVE',
+            status: "ACTIVE",
             expiresAt: { lt: new Date() },
           },
         ],
@@ -179,11 +188,9 @@ export class AssessmentResultModel {
   static async findBySessionId(sessionId: string): Promise<AssessmentResult[]> {
     return prisma.assessmentResult.findMany({
       where: { sessionId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
-
-
 
   /**
    * Update result
@@ -208,7 +215,9 @@ export class AssessmentResultModel {
   /**
    * Get session results with session data
    */
-  static async findWithSession(id: string): Promise<AssessmentResultWithSession | null> {
+  static async findWithSession(
+    id: string
+  ): Promise<AssessmentResultWithSession | null> {
     return prisma.assessmentResult.findUnique({
       where: { id },
       include: {
@@ -232,7 +241,8 @@ export class AssessmentResultModel {
 
     const answeredQuestions = results.filter(r => r.response !== null).length;
     const totalScore = results.reduce((sum, r) => sum + (r.score || 0), 0);
-    const averageScore = answeredQuestions > 0 ? totalScore / answeredQuestions : 0;
+    const averageScore =
+      answeredQuestions > 0 ? totalScore / answeredQuestions : 0;
 
     return {
       answeredQuestions,

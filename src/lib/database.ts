@@ -9,10 +9,13 @@ const globalForPrisma = globalThis as unknown as {
 // Enhanced Prisma client with SQLite-specific configuration
 const prismaClientSingleton = () => {
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL || 'file:./dev.db',
+        url: process.env.DATABASE_URL || "file:./dev.db",
       },
     },
   });
@@ -26,10 +29,10 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 export async function checkDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log('✅ Database connection established successfully');
+    console.log("✅ Database connection established successfully");
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error("❌ Database connection failed:", error);
     return false;
   }
 }
@@ -38,26 +41,25 @@ export async function checkDatabaseConnection() {
 export async function disconnectDatabase() {
   try {
     await prisma.$disconnect();
-    console.log('✅ Database connection closed successfully');
+    console.log("✅ Database connection closed successfully");
   } catch (error) {
-    console.error('❌ Error closing database connection:', error);
+    console.error("❌ Error closing database connection:", error);
   }
 }
 
 // Handle process termination
-process.on('beforeExit', async () => {
+process.on("beforeExit", async () => {
   await disconnectDatabase();
 });
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   await disconnectDatabase();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
   await disconnectDatabase();
   process.exit(0);
 });
 
 export default prisma;
-

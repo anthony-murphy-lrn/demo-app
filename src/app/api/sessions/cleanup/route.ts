@@ -1,27 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { STATUS_CODES } from "@/constants";
-import { createSuccessResponse, handleGenericError } from "@/utils/error-handler";
-import { sessionCleanupService } from "@/lib/session-cleanup";
+import {
+  createSuccessResponse,
+  handleGenericError,
+} from "@/utils/error-handler";
+import SessionCleanupService from "@/lib/session-cleanup";
 
 // POST /api/sessions/cleanup - Clean up expired sessions
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { force = false, sessionId } = body;
+    const { sessionId } = body;
 
     let cleanupResult;
 
     if (sessionId) {
       // Clean up specific session
-      cleanupResult = await sessionCleanupService.cleanupSession(sessionId, force);
+      cleanupResult =
+        await SessionCleanupService.forceCleanupSession(sessionId);
     } else {
       // Clean up all expired sessions
-      cleanupResult = await sessionCleanupService.performCleanup();
+      cleanupResult = await SessionCleanupService.performCleanup();
     }
 
     return createSuccessResponse({
       message: "Session cleanup completed successfully",
-      ...cleanupResult,
+      success: cleanupResult,
     });
   } catch (error) {
     return handleGenericError(error, "Session Cleanup");
@@ -29,12 +33,9 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/sessions/cleanup - Get cleanup statistics
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const includeDetails = searchParams.get("includeDetails") === "true";
-
-    const statistics = await sessionCleanupService.getStatistics(includeDetails);
+    const statistics = await SessionCleanupService.getCleanupStats();
 
     return createSuccessResponse({
       message: "Cleanup statistics retrieved successfully",
@@ -46,13 +47,13 @@ export async function GET(request: NextRequest) {
 }
 
 // PUT /api/sessions/cleanup - Update expired session statuses
-export async function PUT(request: NextRequest) {
+export async function PUT(_request: NextRequest) {
   try {
-    const updatedCount = await sessionCleanupService.updateExpiredStatuses();
+    const isNeeded = await SessionCleanupService.isCleanupNeeded();
 
     return createSuccessResponse({
-      message: "Expired session statuses updated successfully",
-      updatedSessions: updatedCount,
+      message: "Cleanup status checked successfully",
+      isCleanupNeeded: isNeeded,
     });
   } catch (error) {
     return handleGenericError(error, "Status Update");
@@ -76,17 +77,20 @@ export async function PATCH(request: NextRequest) {
 
     switch (action) {
       case "start":
-        sessionCleanupService.startAutomatedCleanup();
-        result = { message: "Automated cleanup started" };
+        // Perform cleanup immediately
+        const cleanupResult = await SessionCleanupService.performCleanup();
+        result = { message: "Cleanup performed", ...cleanupResult };
         break;
       case "stop":
-        sessionCleanupService.stopAutomatedCleanup();
-        result = { message: "Automated cleanup stopped" };
+        // Check if cleanup is needed
+        const isNeeded = await SessionCleanupService.isCleanupNeeded();
+        result = { message: "Cleanup status checked", isNeeded };
         break;
       case "status":
+        const stats = await SessionCleanupService.getCleanupStats();
         result = {
           message: "Cleanup service status retrieved",
-          status: sessionCleanupService.getStatus(),
+          status: stats,
         };
         break;
     }
