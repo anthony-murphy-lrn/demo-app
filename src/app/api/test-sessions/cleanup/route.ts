@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (testSessionId) {
       // Clean up specific test session
       cleanupResult =
-        await TestSessionCleanupService.forceCleanupTestSession(testSessionId);
+        await TestSessionCleanupService.forceCleanupSession(testSessionId);
     } else {
       // Clean up all expired test sessions
       cleanupResult = await TestSessionCleanupService.performCleanup();

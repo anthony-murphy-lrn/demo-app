@@ -1,9 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
-import { STATUS_CODES } from "@/constants";
-import {
-  validateIdFormat,
-} from "@/utils/validation";
+import { validateIdFormat } from "@/utils/validation";
 import {
   createSuccessResponse,
   handleValidationErrors,
@@ -13,11 +10,11 @@ import {
 
 // GET /api/test-sessions/[id] - Retrieve test session by ID
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const testSessionId = params.id;
+    const { id: testSessionId } = await params;
 
     // Validate test session ID format
     const idValidation = validateIdFormat(testSessionId);
@@ -40,11 +37,6 @@ export async function GET(
 
     // Check if test session has expired
     if (testSession.expiresAt && testSession.expiresAt < new Date()) {
-      await prisma.testSession.update({
-        where: { id: testSession.id },
-        data: { status: "EXPIRED" },
-      });
-
       return handleNotFoundError("Test Session");
     }
 

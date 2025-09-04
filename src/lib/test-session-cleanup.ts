@@ -1,4 +1,5 @@
 import { prisma } from "./database";
+import { TestSessionModel } from "./models";
 
 export interface CleanupStats {
   expiredSessions: number;
@@ -29,7 +30,7 @@ export class TestSessionCleanupService {
       return;
     }
 
-    const intervalMs = testSessionConfig.cleanupIntervalMinutes * 60 * 1000;
+    const intervalMs = 60 * 60 * 1000; // 1 hour default
 
     this.cleanupInterval = setInterval(async () => {
       if (!this.isRunning) {
@@ -38,7 +39,7 @@ export class TestSessionCleanupService {
     }, intervalMs);
 
     console.log(
-      `🚀 Session cleanup service initialized (interval: ${testSessionConfig.cleanupIntervalMinutes} minutes)`
+      `🚀 Session cleanup service initialized (interval: 60 minutes)`
     );
   }
 
@@ -130,19 +131,13 @@ export class TestSessionCleanupService {
    */
   private static async cleanupExpiredSessions(): Promise<number> {
     try {
-      const expiredSessions = await SessionModel.findExpired();
-      let cleanedCount = 0;
-
-      for (const session of expiredSessions) {
-        if (session.status === "ACTIVE") {
-          await SessionModel.updateStatus(session.id, "EXPIRED");
-          cleanedCount++;
-          console.log(`⏰ Marked expired session: ${session.id}`);
-        }
-      }
+      const expiredSessions = await TestSessionModel.findExpired();
+      const cleanedCount = expiredSessions.length;
 
       if (cleanedCount > 0) {
-        console.log(`⏰ Cleaned up ${cleanedCount} expired sessions`);
+        console.log(
+          `⏰ Found ${cleanedCount} expired sessions (no status updates needed)`
+        );
       }
 
       return cleanedCount;
@@ -158,26 +153,22 @@ export class TestSessionCleanupService {
   private static async cleanupAbandonedSessions(): Promise<number> {
     try {
       const abandonedThreshold = new Date(
-        Date.now() - 24 // hours * 60 * 60 * 1000
+        Date.now() - 24 * 60 * 60 * 1000 // 24 hours
       );
 
       const abandonedSessions = await prisma.testSession.findMany({
         where: {
-          status: "ACTIVE",
           updatedAt: { lt: abandonedThreshold },
           expiresAt: { gt: new Date() }, // Not expired yet, but abandoned
         },
       });
 
-      let cleanedCount = 0;
-      for (const session of abandonedSessions) {
-        await SessionModel.updateStatus(session.id, "EXPIRED");
-        cleanedCount++;
-        console.log(`🚫 Marked abandoned session: ${session.id}`);
-      }
+      const cleanedCount = abandonedSessions.length;
 
       if (cleanedCount > 0) {
-        console.log(`🚫 Cleaned up ${cleanedCount} abandoned sessions`);
+        console.log(
+          `🚫 Found ${cleanedCount} abandoned sessions (no status updates needed)`
+        );
       }
 
       return cleanedCount;
@@ -188,26 +179,25 @@ export class TestSessionCleanupService {
   }
 
   /**
-   * Clean up old completed sessions
+   * Clean up old sessions (based on age)
    */
   private static async cleanupOldCompletedSessions(): Promise<number> {
     try {
       const oldThreshold = new Date(
-        Date.now() - 7 // days * 24 * 60 * 60 * 1000
+        Date.now() - 7 * 24 * 60 * 60 * 1000 // 7 days
       );
 
-      const oldCompletedSessions = await prisma.testSession.findMany({
+      const oldSessions = await prisma.testSession.findMany({
         where: {
-          status: "COMPLETED",
           updatedAt: { lt: oldThreshold },
         },
       });
 
       let cleanedCount = 0;
-      for (const session of oldCompletedSessions) {
+      for (const session of oldSessions) {
         // Delete the session and all related results
         await prisma.assessmentResult.deleteMany({
-          where: { sessionId: session.id },
+          where: { testSessionId: session.id },
         });
 
         await prisma.testSession.delete({
@@ -215,16 +205,16 @@ export class TestSessionCleanupService {
         });
 
         cleanedCount++;
-        console.log(`🗑️  Deleted old completed session: ${session.id}`);
+        console.log(`🗑️  Deleted old session: ${session.id}`);
       }
 
       if (cleanedCount > 0) {
-        console.log(`🗑️  Cleaned up ${cleanedCount} old completed sessions`);
+        console.log(`🗑️  Cleaned up ${cleanedCount} old sessions`);
       }
 
       return cleanedCount;
     } catch (error) {
-      console.error("❌ Failed to cleanup old completed sessions:", error);
+      console.error("❌ Failed to cleanup old sessions:", error);
       return 0;
     }
   }
@@ -278,14 +268,14 @@ export class TestSessionCleanupService {
    */
   static async forceCleanupSession(sessionId: string): Promise<boolean> {
     try {
-      const session = await SessionModel.findById(sessionId);
+      const session = await TestSessionModel.findById(sessionId);
       if (!session) {
         return false;
       }
 
       // Delete all related results first
       await prisma.assessmentResult.deleteMany({
-        where: { sessionId },
+        where: { testSessionId: sessionId },
       });
 
       // Delete the session
@@ -308,25 +298,22 @@ export class TestSessionCleanupService {
     totalSessions: number;
     activeSessions: number;
     expiredSessions: number;
-    completedSessions: number;
     abandonedSessions: number;
     lastCleanup: Date | null;
     nextCleanup: Date | null;
   }> {
     try {
-      const [total, active, expired, completed] = await Promise.all([
+      const [total, active, expired] = await Promise.all([
         prisma.testSession.count(),
-        prisma.testSession.count({ where: { status: "ACTIVE" } }),
-        prisma.testSession.count({ where: { status: "EXPIRED" } }),
-        prisma.testSession.count({ where: { status: "COMPLETED" } }),
+        TestSessionModel.findActive().then(sessions => sessions.length),
+        TestSessionModel.findExpired().then(sessions => sessions.length),
       ]);
 
       const abandonedThreshold = new Date(
-        Date.now() - 24 // hours * 60 * 60 * 1000
+        Date.now() - 24 * 60 * 60 * 1000 // 24 hours
       );
       const abandoned = await prisma.testSession.count({
         where: {
-          status: "ACTIVE",
           updatedAt: { lt: abandonedThreshold },
           expiresAt: { gt: new Date() },
         },
@@ -334,16 +321,13 @@ export class TestSessionCleanupService {
 
       const lastCleanup = this.isRunning ? new Date() : null;
       const nextCleanup = this.cleanupInterval
-        ? new Date(
-            Date.now() + testSessionConfig.cleanupIntervalMinutes * 60 * 1000
-          )
+        ? new Date(Date.now() + 60 * 60 * 1000) // 1 hour
         : null;
 
       return {
         totalSessions: total,
         activeSessions: active,
         expiredSessions: expired,
-        completedSessions: completed,
         abandonedSessions: abandoned,
         lastCleanup,
         nextCleanup,
@@ -361,12 +345,12 @@ export class TestSessionCleanupService {
     try {
       const stats = await this.getCleanupStats();
 
-      // Cleanup is needed if there are expired, abandoned, or old completed sessions
+      // Cleanup is needed if there are expired, abandoned, or many total sessions
       return (
         stats.expiredSessions > 0 ||
         stats.abandonedSessions > 0 ||
-        stats.completedSessions > 10
-      ); // Arbitrary threshold
+        stats.totalSessions > 100 // Arbitrary threshold
+      );
     } catch (error) {
       console.error("❌ Failed to check if cleanup is needed:", error);
       return false;
@@ -375,20 +359,20 @@ export class TestSessionCleanupService {
 }
 
 // Initialize the cleanup service when the module is loaded
-SessionCleanupService.initialize();
+TestSessionCleanupService.initialize();
 
 // Handle process termination to stop the cleanup service
 process.on("beforeExit", () => {
-  SessionCleanupService.stop();
+  TestSessionCleanupService.stop();
 });
 
 process.on("SIGINT", () => {
-  SessionCleanupService.stop();
+  TestSessionCleanupService.stop();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-  SessionCleanupService.stop();
+  TestSessionCleanupService.stop();
   process.exit(0);
 });
 

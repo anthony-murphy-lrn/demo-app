@@ -47,9 +47,12 @@ export default function AssessmentPlayer({
           testSessionId: sessionId,
           studentId,
         };
-        
-        console.log("AssessmentPlayer - Sending request to /api/learnosity with body:", requestBody);
-        
+
+        console.log(
+          "AssessmentPlayer - Sending request to /api/learnosity with body:",
+          requestBody
+        );
+
         const response = await fetch("/api/learnosity", {
           method: "POST",
           headers: {
@@ -63,9 +66,11 @@ export default function AssessmentPlayer({
           console.error("AssessmentPlayer - API error response:", {
             status: response.status,
             statusText: response.statusText,
-            body: errorText
+            body: errorText,
           });
-          throw new Error(`Failed to initialize assessment session: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to initialize assessment session: ${response.status} ${response.statusText}`
+          );
         }
 
         const data: LearnosityResponse = await response.json();

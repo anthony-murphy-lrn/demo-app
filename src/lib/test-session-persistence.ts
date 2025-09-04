@@ -1,4 +1,5 @@
 import { prisma } from "./database";
+import { TestSessionModel, TestSessionWithResults } from "./models";
 
 export interface SessionState {
   sessionId: string;
@@ -19,7 +20,7 @@ export class TestSessionPersistenceService {
     state: Partial<SessionState>
   ): Promise<void> {
     try {
-      const session = await SessionModel.findById(sessionId);
+      const session = await TestSessionModel.findById(sessionId);
       if (!session) {
         throw new Error(`Session ${sessionId} not found`);
       }
@@ -57,7 +58,7 @@ export class TestSessionPersistenceService {
     sessionId: string
   ): Promise<SessionState | null> {
     try {
-      const session = await SessionModel.findWithResults(sessionId);
+      const session = await TestSessionModel.findWithResults(sessionId);
       if (!session) {
         return null;
       }
@@ -79,18 +80,13 @@ export class TestSessionPersistenceService {
   /**
    * Check if a session can be resumed
    */
-  static isSessionResumable(session: Session): boolean {
-    // Session must be active
-    if (session.status !== "ACTIVE") {
-      return false;
-    }
-
+  static isSessionResumable(session: TestSessionWithResults): boolean {
     // Session must not be expired
     if (session.expiresAt && session.expiresAt < new Date()) {
       return false;
     }
 
-    // Learnosity handles progress and completion status
+    // Learnosity handles progress and completion
     return true;
   }
 
@@ -104,7 +100,7 @@ export class TestSessionPersistenceService {
     resumePoint: ResumePoint | null;
   }> {
     try {
-      const session = await SessionModel.findById(sessionId);
+      const session = await TestSessionModel.findWithResults(sessionId);
       if (!session) {
         return {
           canResume: false,

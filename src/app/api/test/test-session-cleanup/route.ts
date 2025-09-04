@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { TestSessionCleanupService } from "../../../../lib/test-session-cleanup";
+import { TestSessionService } from "../../../../lib/test-session-service";
 
 export async function GET(_request: NextRequest) {
   try {
     // Test session cleanup service
     const [cleanupStats, isCleanupNeeded] = await Promise.all([
-      SessionCleanupService.getCleanupStats(),
-      SessionCleanupService.isCleanupNeeded(),
+      TestSessionCleanupService.getCleanupStats(),
+      TestSessionCleanupService.isCleanupNeeded(),
     ]);
 
     return NextResponse.json({
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "performCleanup":
         // Perform manual cleanup
-        const cleanupResult = await SessionCleanupService.performCleanup();
+        const cleanupResult = await TestSessionCleanupService.performCleanup();
 
         return NextResponse.json({
           status: "success",
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
 
       case "forceCleanupSession":
         // Force cleanup a specific session
-        const success = await SessionCleanupService.forceCleanupSession(
+        const success = await TestSessionCleanupService.forceCleanupSession(
           data.sessionId
         );
 
@@ -70,8 +72,8 @@ export async function POST(request: NextRequest) {
 
       case "checkCleanupStatus":
         // Check if cleanup is needed
-        const needsCleanup = await SessionCleanupService.isCleanupNeeded();
-        const stats = await SessionCleanupService.getCleanupStats();
+        const needsCleanup = await TestSessionCleanupService.isCleanupNeeded();
+        const stats = await TestSessionCleanupService.getCleanupStats();
 
         return NextResponse.json({
           status: "success",
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
 
       case "createExpiredSession":
         // Create a test session that will be expired
-        const expiredSession = await TestSessionService.createSession({
+        const expiredSession = await TestSessionService.createTestSession({
           studentId: `expired-test-${Date.now()}`,
           learnositySessionId: `expired-learnosity-${Date.now()}`,
           assessmentId: "expired-assessment",
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
 
       case "createAbandonedSession":
         // Create a test session that will be considered abandoned
-        const abandonedSession = await TestSessionService.createSession({
+        const abandonedSession = await TestSessionService.createTestSession({
           studentId: `abandoned-test-${Date.now()}`,
           learnositySessionId: `abandoned-learnosity-${Date.now()}`,
           assessmentId: "abandoned-assessment",
@@ -115,9 +117,10 @@ export async function POST(request: NextRequest) {
 
       case "testFullCleanupFlow":
         // Test the complete cleanup flow
-        const beforeStats = await SessionCleanupService.getCleanupStats();
-        const fullCleanupResult = await SessionCleanupService.performCleanup();
-        const afterStats = await SessionCleanupService.getCleanupStats();
+        const beforeStats = await TestSessionCleanupService.getCleanupStats();
+        const fullCleanupResult =
+          await TestSessionCleanupService.performCleanup();
+        const afterStats = await TestSessionCleanupService.getCleanupStats();
 
         return NextResponse.json({
           status: "success",

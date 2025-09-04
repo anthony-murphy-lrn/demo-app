@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TestSession } from "@/types";
-import TestSessionStatus from "./TestSessionStatus";
 
 interface TestSessionResumptionProps {
   studentId: string;
@@ -14,7 +13,8 @@ export default function TestSessionResumption({
   studentId,
   onTestSessionResume,
 }: TestSessionResumptionProps) {
-  const [existingTestSession, setExistingTestSession] = useState<TestSession | null>(null);
+  const [existingTestSession, setExistingTestSession] =
+    useState<TestSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -26,7 +26,9 @@ export default function TestSessionResumption({
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/test-sessions?studentId=${studentId}`);
+        const response = await fetch(
+          `/api/test-sessions?studentId=${studentId}`
+        );
 
         if (response.status === 404) {
           // No existing test session found - this is normal, not an error
@@ -42,14 +44,16 @@ export default function TestSessionResumption({
         const data = await response.json();
         const testSession: TestSession = data.data; // GET method returns data.data directly
 
-        if (testSession && testSession.status === "ACTIVE") {
+        if (testSession) {
           setExistingTestSession(testSession);
         } else {
           setExistingTestSession(null);
         }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to check test session status"
+          err instanceof Error
+            ? err.message
+            : "Failed to check test session status"
         );
         console.error("Error checking existing test session:", err);
       } finally {
@@ -70,7 +74,7 @@ export default function TestSessionResumption({
   const handleStartNewSession = async () => {
     try {
       // Create a new session
-      const response = await fetch("/api/sessions", {
+      const response = await fetch("/api/test-sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,9 +90,9 @@ export default function TestSessionResumption({
       }
 
       const data = await response.json();
-      const newSession: Session = data.data.session; // POST method returns data.data.session
+      const newSession: TestSession = data.data; // POST method returns data.data
 
-      onSessionResume?.(newSession);
+      onTestSessionResume?.(newSession);
       router.push("/assessment");
     } catch (err) {
       setError(
@@ -102,22 +106,10 @@ export default function TestSessionResumption({
     if (!existingTestSession) return;
 
     try {
-      const response = await fetch(`/api/test-sessions`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          testSessionId: existingTestSession.id,
-          status: "CANCELLED",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to cancel session");
-      }
-
-      setExistingSession(null);
+      // Note: Session cancellation is now handled by Learnosity
+      // We just clear the local state
+      setExistingTestSession(null);
+      console.log("Session cancelled (handled by Learnosity)");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to cancel session");
       console.error("Error cancelling session:", err);
@@ -196,16 +188,18 @@ export default function TestSessionResumption({
                       <div className="col-6">
                         <strong>Started:</strong>
                         <br />
-                        {new Date(existingTestSession.createdAt).toLocaleString()}
+                        {new Date(
+                          existingTestSession.createdAt
+                        ).toLocaleString()}
                       </div>
                       <div className="col-6">
-                        <strong>Status:</strong>
+                        <strong>Expires:</strong>
                         <br />
-                        <span
-                          className={`badge bg-${existingTestSession.status === "ACTIVE" ? "success" : "secondary"}`}
-                        >
-                          {existingTestSession.status}
-                        </span>
+                        {existingTestSession.expiresAt
+                          ? new Date(
+                              existingTestSession.expiresAt
+                            ).toLocaleString()
+                          : "No expiration"}
                       </div>
                       <div className="col-6">
                         <strong>Assessment ID:</strong>
@@ -217,15 +211,6 @@ export default function TestSessionResumption({
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Session Status */}
-              <div className="mb-4">
-                <h6 className="mb-2">Current Status</h6>
-                <TestSessionStatus
-                  testSessionId={existingTestSession.id}
-                  studentId={studentId}
-                />
               </div>
 
               {/* Action Buttons */}

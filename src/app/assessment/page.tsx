@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AssessmentPlayer from "@/components/AssessmentPlayer";
-import TestSessionStatus from "@/components/TestSessionStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { TestSession } from "@/types";
 
@@ -47,7 +46,11 @@ export default function AssessmentPage() {
           throw new Error("No active test session found");
         }
 
-        if (testSessionData.status === "EXPIRED") {
+        // Check if session is expired based on expiresAt timestamp
+        if (
+          testSessionData.expiresAt &&
+          new Date(testSessionData.expiresAt) < new Date()
+        ) {
           throw new Error(
             "Test session has expired. Please start a new assessment."
           );
@@ -71,19 +74,7 @@ export default function AssessmentPage() {
     try {
       console.log("Assessment completed:", results);
 
-      // Update test session status to completed
-      if (testSession) {
-        await fetch("/api/test-sessions", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            testSessionId: testSession.id,
-            status: "COMPLETED",
-          }),
-        });
-      }
+      // Note: Session completion is handled by Learnosity
 
       // Navigate to results page or back to home
       router.push("/?completed=true");
@@ -166,10 +157,14 @@ export default function AssessmentPage() {
         className="assessment-page"
         style={{ maxWidth: "100vw", overflow: "hidden" }}
       >
-        {/* Test Session Status Header */}
+        {/* Test Session Info Header */}
         <div className="bg-white border-bottom py-2">
           <div className="container">
-            <TestSessionStatus testSessionId={testSession.id} studentId={studentId} />
+            <div className="d-flex align-items-center">
+              <small className="text-muted">
+                Test Session ID: {testSession.id}
+              </small>
+            </div>
           </div>
         </div>
 

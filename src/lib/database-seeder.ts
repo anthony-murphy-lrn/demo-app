@@ -142,7 +142,9 @@ export class DatabaseSeeder {
         });
 
         testSessions.push(testSession);
-        console.log(`✅ Created test session for ${studentName} (${studentId})`);
+        console.log(
+          `✅ Created test session for ${studentName} (${studentId})`
+        );
       } catch (error) {
         console.error(`❌ Failed to create test session ${i + 1}:`, error);
       }
@@ -195,7 +197,7 @@ export class DatabaseSeeder {
           results.push(result);
         } catch (error) {
           console.error(
-            `❌ Failed to create result for session ${session.id}, question ${q}:`,
+            `❌ Failed to create result for session ${testSession.id}, question ${q}:`,
             error
           );
         }
@@ -228,21 +230,20 @@ export class DatabaseSeeder {
   ): Promise<void> {
     console.log("🎭 Creating session variety states...");
 
-    if (config.includeExpiredSessions && sessions.length > 0) {
+    if (config.includeExpiredTestSessions && sessions.length > 0) {
       // Create some expired sessions
-      const expiredSession = await TestSessionService.createTestSession({
+      await TestSessionService.createTestSession({
         studentId: "demo-expired-student",
         learnositySessionId: "demo-expired-learnosity",
         assessmentId: "demo-expired-assessment",
-
         expiresAt: new Date(Date.now() - 60 * 60 * 1000), // Expired 1 hour ago
       });
 
-      await SessionModel.updateStatus(expiredSession.id, "EXPIRED");
+      // Session is already expired by time
       console.log("⏰ Created expired session for demonstration");
     }
 
-    if (config.includeCompletedSessions && sessions.length > 0) {
+    if (config.includeCompletedTestSessions && sessions.length > 0) {
       // Create a completed session
       const completedSession = await TestSessionService.createTestSession({
         studentId: "demo-completed-student",
@@ -255,18 +256,18 @@ export class DatabaseSeeder {
       // Create results for all questions
       for (let q = 1; q <= 6; q++) {
         await AssessmentResultModel.create({
-          sessionId: completedSession.id,
+          testSessionId: completedSession.id,
           response: { answer: "Completed answer", questionType: "demo" },
           score: 95,
           timeSpent: 45,
         });
       }
 
-      await TestSessionService.completeSession(completedSession.id);
+      // Learnosity handles completion status
       console.log("✅ Created completed session for demonstration");
     }
 
-    if (config.includeAbandonedSessions && sessions.length > 0) {
+    if (config.includeAbandonedTestSessions && sessions.length > 0) {
       // Create an abandoned session (no activity for extended period)
       const abandonedSession = await TestSessionService.createTestSession({
         studentId: "demo-abandoned-student",
@@ -278,7 +279,7 @@ export class DatabaseSeeder {
 
       // Create only a few results to simulate abandonment
       await AssessmentResultModel.create({
-        sessionId: abandonedSession.id,
+        testSessionId: abandonedSession.id,
         response: { answer: "Partial answer", questionType: "demo" },
         score: 85,
         timeSpent: 60,
@@ -340,15 +341,10 @@ export class DatabaseSeeder {
         this.getDatabaseSize(),
       ]);
 
-      const statusCounts = await prisma.testSession.groupBy({
-        by: ["status"],
-        _count: { status: true },
-      });
-
-      const sessionStatuses: Record<string, number> = {};
-      statusCounts.forEach(count => {
-        sessionStatuses[count.status] = count._count.status;
-      });
+      // Status tracking removed - Learnosity handles status management
+      const sessionStatuses: Record<string, number> = {
+        "managed_by_learnosity": sessions,
+      };
 
       return {
         totalSessions: sessions,

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { TestSessionService } from "../../../../lib/test-session-service";
 
 export async function GET(_request: NextRequest) {
   try {
     // Test session service operations
     const [activeSessions, sessionStats] = await Promise.all([
-      TestTestSessionService.getActiveSessions(),
-      TestTestSessionService.getSessionStats(),
+      TestSessionService.getActiveSessions(),
+      TestSessionService.getSessionStats(),
     ]);
 
     return NextResponse.json({
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "createSession":
         // Create a test session using the service
-        const testSession = await TestSessionService.createSession({
+        const testSession = await TestSessionService.createTestSession({
           studentId: `test-student-service-${Date.now()}`,
           learnositySessionId: `test-learnosity-service-${Date.now()}`,
           assessmentId: "test-assessment-service",
@@ -98,15 +99,10 @@ export async function POST(request: NextRequest) {
         });
 
       case "completeSession":
-        // Complete a session
-        const completedSession = await TestSessionService.completeSession(
-          data.sessionId
-        );
-
+        // Note: Session completion is now handled by Learnosity
         return NextResponse.json({
           status: "success",
-          message: "Session completed successfully",
-          session: completedSession,
+          message: "Session completion is handled by Learnosity",
         });
 
       case "cleanupExpired":

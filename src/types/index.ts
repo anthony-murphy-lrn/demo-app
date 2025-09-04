@@ -3,7 +3,6 @@ export interface TestSession {
   id: string;
   studentId: string;
   learnositySessionId: string;
-  status: "ACTIVE" | "COMPLETED" | "EXPIRED" | "CANCELLED";
   createdAt: Date;
   updatedAt: Date;
   expiresAt?: Date;
@@ -28,7 +27,8 @@ export interface CreateTestSessionRequest {
 }
 
 export interface UpdateTestSessionRequest {
-  status?: TestSession["status"];
+  // No fields currently supported for updates
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 }
 
 export interface CreateResultRequest {
@@ -61,7 +61,6 @@ export interface LearnosityResponse {
       id: string;
       studentId: string;
       assessmentId: string;
-      status: string;
     };
   };
   timestamp: string;

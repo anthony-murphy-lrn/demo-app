@@ -1,10 +1,6 @@
 import { prisma } from "./database";
 import { TestSessionModel, AssessmentResultModel } from "./models";
-import type {
-  TestSession,
-  TestSessionStatus,
-  TestSessionWithResults,
-} from "./models";
+import type { TestSession, TestSessionWithResults } from "./models";
 import { testSessionConfig } from "./config";
 import { generateLearnositySessionId } from "../utils/test-session-id-generator";
 
@@ -23,7 +19,6 @@ export interface TestSessionProgress {
 export interface TestSessionSummary {
   id: string;
   studentId: string;
-  status: TestSessionStatus;
   createdAt: Date;
   expiresAt?: Date;
   isExpired: boolean;
@@ -38,23 +33,22 @@ export class TestSessionService {
     data: CreateTestSessionData
   ): Promise<TestSession> {
     try {
-      // Check if student already has an active test session
+      // Check if student already has a recent test session
       const existingTestSession = await TestSessionModel.findByStudentId(
         data.studentId
       );
-      if (existingTestSession && existingTestSession.status === "ACTIVE") {
-        // If test session exists but is expired, mark it as expired
+      if (existingTestSession) {
+        // If test session exists but is expired, we can create a new one
         if (
           existingTestSession.expiresAt &&
           existingTestSession.expiresAt < new Date()
         ) {
-          await TestSessionModel.updateStatus(
-            existingTestSession.id,
-            "EXPIRED"
+          console.log(
+            `ℹ️ Student ${data.studentId} has an expired test session, creating new one`
           );
         } else {
-          throw new Error(
-            `Student ${data.studentId} already has an active test session`
+          console.log(
+            `ℹ️ Student ${data.studentId} already has a test session, creating new one`
           );
         }
       }
@@ -91,17 +85,10 @@ export class TestSessionService {
     id: string
   ): Promise<TestSessionWithResults | null> {
     try {
-      const session = await SessionModel.findWithResults(id);
+      const session = await TestSessionModel.findWithResults(id);
       if (!session) {
         console.log(`⚠️  Session not found: ${id}`);
         return null;
-      }
-
-      // Check if session has expired
-      if (session.isExpired && session.status === "ACTIVE") {
-        await SessionModel.updateStatus(id, "EXPIRED");
-        session.status = "EXPIRED";
-        session.isActive = false;
       }
 
       return session;
@@ -116,14 +103,14 @@ export class TestSessionService {
    */
   static async getSessionByStudentId(
     studentId: string
-  ): Promise<SessionWithResults | null> {
+  ): Promise<TestSessionWithResults | null> {
     try {
-      const session = await SessionModel.findByStudentId(studentId);
+      const session = await TestSessionModel.findByStudentId(studentId);
       if (!session) {
         return null;
       }
 
-      return this.getSessionById(session.id);
+      return this.getTestSessionById(session.id);
     } catch (error) {
       console.error(
         `❌ Failed to retrieve session for student ${studentId}:`,
@@ -138,15 +125,15 @@ export class TestSessionService {
    */
   static async getSessionByLearnosityId(
     learnositySessionId: string
-  ): Promise<SessionWithResults | null> {
+  ): Promise<TestSessionWithResults | null> {
     try {
       const session =
-        await SessionModel.findByLearnositySessionId(learnositySessionId);
+        await TestSessionModel.findByLearnositySessionId(learnositySessionId);
       if (!session) {
         return null;
       }
 
-      return this.getSessionById(session.id);
+      return this.getTestSessionById(session.id);
     } catch (error) {
       console.error(
         `❌ Failed to retrieve session by Learnosity ID ${learnositySessionId}:`,
@@ -163,7 +150,7 @@ export class TestSessionService {
     sessionId: string,
     currentQuestion: number,
     progress: number
-  ): Promise<Session> {
+  ): Promise<TestSession> {
     try {
       // Validate progress values
       if (currentQuestion < 1 || progress < 0 || progress > 100) {
@@ -193,14 +180,15 @@ export class TestSessionService {
    */
   static async getSessionProgress(
     sessionId: string
-  ): Promise<SessionProgress | null> {
+  ): Promise<TestSessionProgress | null> {
     try {
-      const session = await SessionModel.findById(sessionId);
+      const session = await TestSessionModel.findById(sessionId);
       if (!session) {
         return null;
       }
 
-      const results = await AssessmentResultModel.findBySessionId(sessionId);
+      const results =
+        await AssessmentResultModel.findByTestSessionId(sessionId);
       const questionsAnswered = results.length;
 
       let timeRemaining: number | undefined;
@@ -230,18 +218,14 @@ export class TestSessionService {
    */
   static async resumeSession(
     sessionId: string
-  ): Promise<SessionWithResults | null> {
+  ): Promise<TestSessionWithResults | null> {
     try {
-      const session = await this.getSessionById(sessionId);
+      const session = await this.getTestSessionById(sessionId);
       if (!session) {
         return null;
       }
 
       // Check if session can be resumed
-      if (session.status === "COMPLETED") {
-        throw new Error("Cannot resume completed session");
-      }
-
       if (session.isExpired) {
         throw new Error("Cannot resume expired session");
       }
@@ -261,50 +245,19 @@ export class TestSessionService {
   }
 
   /**
-   * Complete a session
-   */
-  static async completeSession(sessionId: string): Promise<Session> {
-    try {
-      const session = await SessionModel.markCompleted(sessionId);
-      console.log(`✅ Session ${sessionId} marked as completed`);
-      return session;
-    } catch (error) {
-      console.error(`❌ Failed to complete session ${sessionId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Cancel a session
-   */
-  static async cancelSession(sessionId: string): Promise<Session> {
-    try {
-      const session = await SessionModel.updateStatus(sessionId, "CANCELLED");
-      console.log(`✅ Session ${sessionId} cancelled`);
-      return session;
-    } catch (error) {
-      console.error(`❌ Failed to cancel session ${sessionId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
    * Get all active sessions
    */
-  static async getActiveSessions(): Promise<SessionSummary[]> {
+  static async getActiveSessions(): Promise<TestSessionSummary[]> {
     try {
-      const sessions = await SessionModel.findActive();
+      const sessions = await TestSessionModel.findActive();
 
       return sessions.map(session => ({
         id: session.id,
         studentId: session.studentId,
-        status: session.status,
         createdAt: session.createdAt,
         expiresAt: session.expiresAt || undefined,
         isExpired: session.expiresAt ? new Date() > session.expiresAt : false,
-        isActive:
-          session.status === "ACTIVE" &&
-          !(session.expiresAt ? new Date() > session.expiresAt : false),
+        isActive: !(session.expiresAt ? new Date() > session.expiresAt : false),
       }));
     } catch (error) {
       console.error("❌ Failed to get active sessions:", error);
@@ -318,26 +271,20 @@ export class TestSessionService {
   static async getSessionStats(): Promise<{
     total: number;
     active: number;
-    completed: number;
     expired: number;
-    cancelled: number;
   }> {
     try {
-      const [active, expired, completed, cancelled] = await Promise.all([
-        SessionModel.findActive(),
-        SessionModel.findExpired(),
-        prisma.testSession.count({ where: { status: "COMPLETED" } }),
-        prisma.testSession.count({ where: { status: "CANCELLED" } }),
+      const [active, expired] = await Promise.all([
+        TestSessionModel.findActive(),
+        TestSessionModel.findExpired(),
       ]);
 
-      const total = active.length + expired.length + completed + cancelled;
+      const total = active.length + expired.length;
 
       return {
         total,
         active: active.length,
-        completed,
         expired: expired.length,
-        cancelled,
       };
     } catch (error) {
       console.error("❌ Failed to get session statistics:", error);
@@ -350,18 +297,13 @@ export class TestSessionService {
    */
   static async cleanupExpiredSessions(): Promise<number> {
     try {
-      const expiredSessions = await SessionModel.findExpired();
-      let cleanedCount = 0;
-
-      for (const session of expiredSessions) {
-        if (session.status === "ACTIVE") {
-          await SessionModel.updateStatus(session.id, "EXPIRED");
-          cleanedCount++;
-        }
-      }
+      const expiredSessions = await TestSessionModel.findExpired();
+      const cleanedCount = expiredSessions.length;
 
       if (cleanedCount > 0) {
-        console.log(`🧹 Cleaned up ${cleanedCount} expired sessions`);
+        console.log(
+          `🧹 Found ${cleanedCount} expired sessions (no cleanup needed since status was removed)`
+        );
       }
 
       return cleanedCount;

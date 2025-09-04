@@ -1,12 +1,8 @@
 import { prisma } from "./database";
-import type {
-  TestSession,
-  AssessmentResult,
-  TestSessionStatus,
-} from "../generated/prisma";
+import type { TestSession, AssessmentResult } from "../generated/prisma";
 
 // Type definitions for database models
-export type { TestSession, AssessmentResult, TestSessionStatus };
+export type { TestSession, AssessmentResult };
 
 // Extended types with additional computed properties
 export interface TestSessionWithResults extends TestSession {
@@ -36,7 +32,6 @@ export class TestSessionModel {
         ...data,
         learnositySessionId:
           data.learnositySessionId || `session_${Date.now()}_${data.studentId}`,
-        status: "ACTIVE",
       },
     });
   }
@@ -44,7 +39,7 @@ export class TestSessionModel {
   /**
    * Find session by ID
    */
-  static async findById(id: string): Promise<Session | null> {
+  static async findById(id: string): Promise<TestSession | null> {
     return prisma.testSession.findUnique({
       where: { id },
     });
@@ -53,7 +48,7 @@ export class TestSessionModel {
   /**
    * Find session by student ID
    */
-  static async findByStudentId(studentId: string): Promise<Session | null> {
+  static async findByStudentId(studentId: string): Promise<TestSession | null> {
     return prisma.testSession.findFirst({
       where: { studentId },
       orderBy: { createdAt: "desc" },
@@ -65,45 +60,18 @@ export class TestSessionModel {
    */
   static async findByLearnositySessionId(
     learnositySessionId: string
-  ): Promise<Session | null> {
+  ): Promise<TestSession | null> {
     return prisma.testSession.findFirst({
       where: { learnositySessionId },
     });
   }
 
   /**
-   * Update session status
-   */
-  static async updateStatus(
-    id: string,
-    status: SessionStatus
-  ): Promise<Session> {
-    return prisma.testSession.update({
-      where: { id },
-      data: {
-        status,
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  /**
-   * Mark session as completed
-   */
-  static async markCompleted(id: string): Promise<Session> {
-    return prisma.testSession.update({
-      where: { id },
-      data: {
-        status: "COMPLETED",
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  /**
    * Get session with results
    */
-  static async findWithResults(id: string): Promise<SessionWithResults | null> {
+  static async findWithResults(
+    id: string
+  ): Promise<TestSessionWithResults | null> {
     const session = await prisma.testSession.findUnique({
       where: { id },
       include: {
@@ -116,21 +84,18 @@ export class TestSessionModel {
     return {
       ...session,
       isExpired: session.expiresAt ? new Date() > session.expiresAt : false,
-      isActive:
-        session.status === "ACTIVE" &&
-        !(session.expiresAt ? new Date() > session.expiresAt : false),
+      isActive: !(session.expiresAt ? new Date() > session.expiresAt : false),
       // Note: Progress is now managed by Learnosity, not stored locally
       progressPercentage: 0,
     };
   }
 
   /**
-   * Get active sessions
+   * Get active sessions (not expired)
    */
-  static async findActive(): Promise<Session[]> {
+  static async findActive(): Promise<TestSession[]> {
     return prisma.testSession.findMany({
       where: {
-        status: "ACTIVE",
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });
@@ -139,19 +104,10 @@ export class TestSessionModel {
   /**
    * Get expired sessions
    */
-  static async findExpired(): Promise<Session[]> {
+  static async findExpired(): Promise<TestSession[]> {
     return prisma.testSession.findMany({
       where: {
-        OR: [
-          { status: "EXPIRED" },
-          {
-            expiresAt: { lt: new Date() },
-          },
-          {
-            status: "ACTIVE",
-            expiresAt: { lt: new Date() },
-          },
-        ],
+        expiresAt: { lt: new Date() },
       },
     });
   }
@@ -163,7 +119,7 @@ export class AssessmentResultModel {
    * Create a new assessment result
    */
   static async create(data: {
-    sessionId: string;
+    testSessionId: string;
     response: any;
     score?: number;
     timeSpent?: number;
@@ -183,11 +139,13 @@ export class AssessmentResultModel {
   }
 
   /**
-   * Find results by session ID
+   * Find results by test session ID
    */
-  static async findBySessionId(sessionId: string): Promise<AssessmentResult[]> {
+  static async findByTestSessionId(
+    testSessionId: string
+  ): Promise<AssessmentResult[]> {
     return prisma.assessmentResult.findMany({
-      where: { sessionId },
+      where: { testSessionId },
       orderBy: { createdAt: "asc" },
     });
   }
@@ -213,30 +171,30 @@ export class AssessmentResultModel {
   }
 
   /**
-   * Get session results with session data
+   * Get result with test session data
    */
-  static async findWithSession(
+  static async findWithTestSession(
     id: string
-  ): Promise<AssessmentResultWithSession | null> {
+  ): Promise<AssessmentResultWithTestSession | null> {
     return prisma.assessmentResult.findUnique({
       where: { id },
       include: {
-        session: true,
+        testSession: true,
       },
     });
   }
 
   /**
-   * Calculate session score
+   * Calculate test session score
    */
-  static async calculateSessionScore(sessionId: string): Promise<{
+  static async calculateTestSessionScore(testSessionId: string): Promise<{
     answeredQuestions: number;
     correctAnswers: number;
     totalScore: number;
     averageScore: number;
   }> {
     const results = await prisma.assessmentResult.findMany({
-      where: { sessionId },
+      where: { testSessionId },
     });
 
     const answeredQuestions = results.filter(r => r.response !== null).length;

@@ -117,31 +117,6 @@ export function validateNumericRange(
   };
 }
 
-// Validate test session status
-export function validateTestSessionStatus(status: string): ValidationResult {
-  const errors: ValidationError[] = [];
-  const validStatuses = ["ACTIVE", "COMPLETED", "EXPIRED", "CANCELLED"];
-
-  if (!status || typeof status !== "string") {
-    errors.push({
-      field: "status",
-      message: "Status is required",
-      code: "MISSING_STATUS",
-    });
-  } else if (!validStatuses.includes(status)) {
-    errors.push({
-      field: "status",
-      message: `Status must be one of: ${validStatuses.join(", ")}`,
-      code: "INVALID_STATUS",
-    });
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
 // Validate JSON data
 export function validateJsonData(data: any, field: string): ValidationResult {
   const errors: ValidationError[] = [];

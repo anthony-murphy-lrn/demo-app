@@ -18,8 +18,8 @@ export async function GET(_request: NextRequest) {
     // Test persistence with first active session
     const testSession = activeSessions[0];
     const [sessionState, recoveryOptions] = await Promise.all([
-      SessionPersistenceService.loadSessionState(testSession.id),
-      SessionPersistenceService.getRecoveryOptions(testSession.id),
+      TestSessionPersistenceService.loadSessionState(testSession.id),
+      TestSessionPersistenceService.getRecoveryOptions(testSession.id),
     ]);
 
     return NextResponse.json({
@@ -29,7 +29,6 @@ export async function GET(_request: NextRequest) {
       testSession: {
         id: testSession.id,
         studentId: testSession.studentId,
-        status: testSession.status,
         createdAt: testSession.createdAt,
         expiresAt: testSession.expiresAt,
         isExpired: testSession.isExpired,
@@ -121,7 +120,7 @@ export async function POST(request: NextRequest) {
 
         // 3. Get recovery options
         const recoveryOptions =
-          await SessionPersistenceService.getRecoveryOptions(sessionId);
+          await TestSessionPersistenceService.getRecoveryOptions(sessionId);
 
         // 4. Resume points are managed by Learnosity, not locally
         console.log(

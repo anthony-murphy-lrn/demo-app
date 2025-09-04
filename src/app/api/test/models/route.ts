@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AssessmentResultModel } from "../../../../lib/models";
+import {
+  AssessmentResultModel,
+  TestSessionModel,
+} from "../../../../lib/models";
 
 export async function GET(_request: NextRequest) {
   try {
     // Test session model operations
-    const activeSessions = await SessionModel.findActive();
-    const expiredSessions = await SessionModel.findExpired();
+    const activeSessions = await TestSessionModel.findActive();
+    const expiredSessions = await TestSessionModel.findExpired();
 
     // Test assessment result model operations
     const totalSessions = activeSessions.length + expiredSessions.length;
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "createTestSession":
         // Create a test session to verify the model
-        const testSession = await SessionModel.create({
+        const testSession = await TestSessionModel.create({
           studentId: `test-student-${Date.now()}`,
           assessmentId: "test-assessment",
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
       case "createTestResult":
         // Create a test assessment result
         const testResult = await AssessmentResultModel.create({
-          sessionId: data.sessionId,
+          testSessionId: data.testSessionId,
           response: { answer: "test answer" },
           score: 10,
           timeSpent: 30,

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -12,43 +9,27 @@ datasource db {
 }
 
 model TestSession {
-  id          String   @id @default(uuid())
-  studentId   String   // Allow multiple test sessions per student
+  id                  String             @id @default(uuid())
+  studentId           String
   learnositySessionId String
-  status      TestSessionStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  expiresAt   DateTime?
-  
-  // Assessment details
-  assessmentId String
-  
-  // Results relationship
-  results AssessmentResult[]
-  
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  expiresAt           DateTime?
+  assessmentId        String
+  results             AssessmentResult[]
+
   @@map("test_sessions")
 }
 
 model AssessmentResult {
-  id          String   @id @default(uuid())
-  testSessionId   String
-  testSession     TestSession  @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
-  
-  // Result data
-  response    Json
-  score       Float?
-  timeSpent   Int? // in seconds
-  
-  // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("assessment_results")
-}
+  id            String      @id @default(uuid())
+  testSessionId String
+  response      Json
+  score         Float?
+  timeSpent     Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  testSession   TestSession @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
 
-enum TestSessionStatus {
-  ACTIVE
-  COMPLETED
-  EXPIRED
-  CANCELLED
+  @@map("assessment_results")
 }

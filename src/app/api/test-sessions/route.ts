@@ -1,12 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
 import { STATUS_CODES, SUCCESS_MESSAGES } from "@/constants";
-import { CreateTestSessionRequest, UpdateTestSessionRequest } from "@/types";
+import { CreateTestSessionRequest } from "@/types";
 import {
   validateQueryParams,
   validateRequestBody,
   validateIdFormat,
-  validateTestSessionStatus,
   combineValidationResults,
 } from "@/utils/validation";
 import { generateLearnositySessionId } from "@/utils/test-session-id-generator";
@@ -33,11 +32,10 @@ export async function GET(request: NextRequest) {
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    // Find the most recent active test session for the student
+    // Find the most recent test session for the student
     const testSession = await prisma.testSession.findFirst({
       where: {
         studentId,
-        status: "ACTIVE",
       },
       orderBy: {
         createdAt: "desc",
@@ -53,11 +51,6 @@ export async function GET(request: NextRequest) {
 
     // Check if test session has expired
     if (testSession.expiresAt && testSession.expiresAt < new Date()) {
-      await prisma.testSession.update({
-        where: { id: testSession.id },
-        data: { status: "EXPIRED" },
-      });
-
       return handleNotFoundError("Test Session");
     }
 
@@ -90,32 +83,26 @@ export async function POST(request: NextRequest) {
     const combinedValidationError = handleValidationErrors(combinedValidation);
     if (combinedValidationError) return combinedValidationError;
 
-    // Check if student already has an active test session
-    const existingActiveTestSession = await prisma.testSession.findFirst({
+    // Check if student already has a recent test session
+    const existingTestSession = await prisma.testSession.findFirst({
       where: {
         studentId: body.studentId,
-        status: "ACTIVE",
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
-    if (existingActiveTestSession) {
-      // If student has an active test session, we have a few options:
-      // 1. Return an error (current behavior)
-      // 2. Automatically expire the old test session and create a new one
-      // 3. Allow the student to choose what to do
+    if (existingTestSession) {
+      // If student has a recent test session, we can either:
+      // 1. Return an error
+      // 2. Allow multiple sessions per student
+      // 3. Check if the existing session is expired and handle accordingly
 
-      // For now, let's automatically expire the old test session and create a new one
-      // This provides a better user experience
-      await prisma.testSession.update({
-        where: { id: existingActiveTestSession.id },
-        data: {
-          status: "EXPIRED",
-          updatedAt: new Date(),
-        },
-      });
-
+      // For now, we'll allow multiple sessions per student
+      // The client can decide which session to use
       console.log(
-        `🔄 Expired previous active test session ${existingActiveTestSession.id} for student ${body.studentId}`
+        `ℹ️ Student ${body.studentId} already has test session ${existingTestSession.id}, creating new one`
       );
     }
 
@@ -163,20 +150,7 @@ export async function PUT(request: NextRequest) {
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    const body: UpdateTestSessionRequest = await request.json();
-
-    // Validate update fields if provided
-    const validations = [];
-    if (body.status !== undefined) {
-      validations.push(validateTestSessionStatus(body.status));
-    }
-
-    if (validations.length > 0) {
-      const combinedValidation = combineValidationResults(...validations);
-      const combinedValidationError =
-        handleValidationErrors(combinedValidation);
-      if (combinedValidationError) return combinedValidationError;
-    }
+    await request.json(); // Consume body but don't use it
 
     // Check if test session exists
     const existingTestSession = await prisma.testSession.findUnique({
@@ -187,11 +161,10 @@ export async function PUT(request: NextRequest) {
       return handleNotFoundError("Test Session");
     }
 
-    // Update test session
+    // Update test session (no fields to update currently)
     const updatedTestSession = await prisma.testSession.update({
       where: { id: testSessionId },
       data: {
-        status: body.status,
         updatedAt: new Date(),
       },
       include: {

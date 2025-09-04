@@ -29,11 +29,17 @@ export async function POST(request: NextRequest) {
       "studentId",
     ]);
     console.log("Learnosity API - Body validation result:", bodyValidation);
-    console.log("Learnosity API - Request body received:", JSON.stringify(body, null, 2));
+    console.log(
+      "Learnosity API - Request body received:",
+      JSON.stringify(body, null, 2)
+    );
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) {
       console.log("Learnosity API - Validation error:", validationError);
-      console.log("Learnosity API - Validation error details:", JSON.stringify(validationError, null, 2));
+      console.log(
+        "Learnosity API - Validation error details:",
+        JSON.stringify(validationError, null, 2)
+      );
       return validationError;
     }
 
@@ -58,7 +64,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve test session from database
-    console.log("Learnosity API - Looking for test session with ID:", body.testSessionId);
+    console.log(
+      "Learnosity API - Looking for test session with ID:",
+      body.testSessionId
+    );
     const testSession = await prisma.testSession.findUnique({
       where: { id: body.testSessionId },
     });
@@ -71,11 +80,6 @@ export async function POST(request: NextRequest) {
 
     // Check if test session has expired
     if (testSession.expiresAt && testSession.expiresAt < new Date()) {
-      await prisma.testSession.update({
-        where: { id: body.testSessionId },
-        data: { status: "EXPIRED" },
-      });
-
       return handleNotFoundError("Test Session");
     }
 
@@ -102,7 +106,6 @@ export async function POST(request: NextRequest) {
           id: testSession.id,
           studentId: testSession.studentId,
           assessmentId: testSession.assessmentId,
-          status: testSession.status,
         },
       });
     } catch (learnosityError: unknown) {

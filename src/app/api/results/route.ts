@@ -63,7 +63,10 @@ export async function POST(request: NextRequest) {
     const body: CreateResultRequest = await request.json();
 
     // Validate request body
-    const bodyValidation = validateRequestBody(body, ["testSessionId", "response"]);
+    const bodyValidation = validateRequestBody(body, [
+      "testSessionId",
+      "response",
+    ]);
     const validationError = handleValidationErrors(bodyValidation);
     if (validationError) return validationError;
 
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     const combinedValidationError = handleValidationErrors(combinedValidation);
     if (combinedValidationError) return combinedValidationError;
 
-    // Check if test session exists and is active
+    // Check if test session exists
     const testSession = await prisma.testSession.findUnique({
       where: { id: body.testSessionId },
     });
@@ -86,12 +89,13 @@ export async function POST(request: NextRequest) {
       return handleNotFoundError("Test Session");
     }
 
-    if (testSession.status !== "ACTIVE") {
+    // Check if test session has expired
+    if (testSession.expiresAt && testSession.expiresAt < new Date()) {
       return createErrorResponse(
-        "Test session is not active",
+        "Test session has expired",
         STATUS_CODES.BAD_REQUEST,
         undefined,
-        "INACTIVE_TEST_SESSION"
+        "EXPIRED_TEST_SESSION"
       );
     }
 
