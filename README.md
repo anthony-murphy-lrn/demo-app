@@ -1,6 +1,6 @@
 # Assessment Delivery Demo Application
 
-A NextJS-based demonstration application for Learnosity's assessment delivery capabilities. This application showcases the integration of Learnosity's Items API for delivering assessments to students with comprehensive session management, security features, regional endpoint support, and local data persistence.
+A NextJS-based demonstration application for Learnosity's assessment delivery capabilities. 
 
 ## Tech Stack
 
