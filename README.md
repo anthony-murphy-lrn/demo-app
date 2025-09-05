@@ -47,8 +47,6 @@ A NextJS-based demonstration application for Learnosity's assessment delivery ca
    LEARNOSITY_ACTIVITY_ID=your_actual_activity_id
    ```
 
-   **Note**: The `LEARNOSITY_DOMAIN` is used as a fallback. The application now supports dynamic regional endpoint configuration through the UI.
-
 4. **Set up the database**
 
    ```bash
@@ -63,52 +61,6 @@ A NextJS-based demonstration application for Learnosity's assessment delivery ca
    ```
 
    The application will be available at [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-### Starting an Assessment
-
-1. Navigate to the application homepage
-2. Enter a Student ID in the input field
-3. Click "Start Assessment" to create a new session
-4. The system will redirect to the assessment player
-
-### Managing Test Sessions
-
-1. After entering a Student ID, the system displays a comprehensive session management interface
-2. View all test sessions for the student with pagination support
-3. See session details including ID, expiry time, and status
-4. Resume active sessions or start new assessments
-5. Navigate between pages of sessions using pagination controls
-
-### Resuming an Assessment
-
-1. If you have an active session, the system will show a "Resume" button in the session table
-2. Click to resume your previous session
-3. Your progress will be restored automatically using Learnosity's built-in session management
-
-### Regional Endpoint Configuration
-
-1. Access the Learnosity configuration panel
-2. Select from available regional endpoints:
-   - US East (items-va.learnosity.com)
-   - Europe (items-ie.learnosity.com) 
-   - Australia (items-au.learnosity.com)
-3. Configure session expiry time (15 minutes to 8 hours)
-4. Changes take effect immediately for new sessions
-
-### Health Monitoring
-
-Check the application health by visiting:
-
-- `/api/health/database` - Database connection status and statistics
-
-### Development Testing
-
-Use the test endpoints for development and debugging:
-
-- `/api/test/database-seeder` - Populate database with test data
-- `/api/test/session-cleanup` - Test session cleanup functionality
 
 ## Project Structure
 
@@ -198,14 +150,6 @@ src/
 
 ## Development
 
-### Code Quality
-
-The project uses ESLint and Prettier for code quality:
-
-- **ESLint**: TypeScript-aware linting with custom rules
-- **Prettier**: Consistent code formatting
-- **TypeScript**: Strict type checking
-
 ### Database
 
 The application uses SQLite with Prisma ORM:
@@ -227,14 +171,6 @@ The application uses two main models:
   - `createdAt`: Session creation timestamp
   - `updatedAt`: Last update timestamp
   - **Note**: Session status is managed by Learnosity, not stored locally
-
-- **AssessmentResult**: Stores assessment results
-  - `id`: Unique result identifier
-  - `testSessionId`: Reference to parent test session
-  - `response`: JSON response data
-  - `score`: Calculated score (optional)
-  - `timeSpent`: Time spent in seconds (optional)
-  - `createdAt`: Result creation timestamp
 
 ### API Routes
 
@@ -258,59 +194,6 @@ The application includes several testing endpoints for development:
 - `/api/test/session-cleanup` - Test session cleanup functionality
 - `/api/test/session-persistence` - Test session persistence features
 - `/api/test/session-service` - Test session service operations
-
-## Demo Features
-
-### Landing Page
-
-- Clean, professional Bootstrap 5 interface
-- Student ID input with validation
-- "Start Assessment" button with loading states
-- Error handling and user feedback
-- Responsive design for all devices
-
-### Test Session Management
-
-- Comprehensive session table with pagination support
-- Visual status indicators (Active/Expired)
-- Session details including ID, expiry time, and creation date
-- Resume functionality for active sessions
-- Start new test capability
-- Responsive design with mobile optimization
-- Error handling and loading states
-
-### Assessment Player
-
-- Learnosity Items API integration with regional endpoint support
-- Session persistence and resumption
-- Progress tracking and auto-save
-- Security features for media assets with domain separation
-- Error boundary protection
-- Loading states and user feedback
-- Back to home navigation
-
-### Regional Endpoint Configuration
-
-- Dynamic Learnosity endpoint selection (US East, Europe, Australia)
-- Session expiry time configuration (15 minutes to 8 hours)
-- Real-time configuration updates
-- Persistent configuration storage
-- Validation and error handling
-
-### Session Management
-
-- Automatic session creation with unique IDs
-- Learnosity-managed session status (not stored locally)
-- Progress saving and restoration
-- Automatic cleanup of expired sessions based on timestamps
-- Pagination support for large session lists
-
-### Health Monitoring
-
-- Database connection health checks
-- System status monitoring
-- Database statistics and metrics
-- Error reporting and diagnostics
 
 ## Troubleshooting
 
@@ -352,31 +235,6 @@ Enable debug logging by setting `NODE_ENV=development` in your environment varia
 - Use `npm run db:studio` to inspect the database visually
 - Check `/api/health/database` for database status
 - Use test endpoints to verify functionality
-
-## Recent Updates
-
-### Domain Separation (Latest)
-
-- **Fixed Learnosity signature mismatch** by separating security domain (localhost) from API endpoint
-- **Regional endpoint support** with dynamic configuration (US East, Europe, Australia)
-- **Improved security** with proper domain handling for Learnosity API calls
-- **Enhanced configuration** through UI-based endpoint selection
-
-### Test Session Management (Completed)
-
-- **Comprehensive session table** with pagination and status indicators
-- **Resume functionality** for active sessions using Learnosity's built-in capabilities
-- **Visual status indicators** for active and expired sessions
-- **Responsive design** optimized for all device sizes
-- **Error handling** with user-friendly feedback
-
-### Testing & Quality
-
-- **Comprehensive test suite** with 40+ tests covering all major functionality
-- **Domain separation tests** ensuring proper Learnosity integration
-- **Component tests** for UI functionality and error handling
-- **API tests** for backend functionality and data validation
-- **Utility tests** for date/time formatting and session management
 
 ## Testing
 
