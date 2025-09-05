@@ -140,7 +140,6 @@ export default function AssessmentPlayer({
       return;
     }
 
-
     if (!containerRef.current || !window.LearnosityItems) {
       console.error("Missing container or LearnosityItems:", {
         container: !!containerRef.current,
@@ -202,7 +201,6 @@ export default function AssessmentPlayer({
             onError?.("Assessment submission failed");
           },
         });
-
       } catch (initError) {
         console.error("Standard init failed:", initError);
 

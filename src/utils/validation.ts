@@ -207,3 +207,125 @@ export function combineValidationResults(
     errors: allErrors,
   };
 }
+
+// Learnosity Configuration Validation
+
+// Valid Learnosity Items API endpoints
+const VALID_LEARNOSITY_ENDPOINTS = [
+  "items-va.learnosity.com",
+  "items-eu.learnosity.com",
+  "items-au.learnosity.com",
+];
+
+// Validate Learnosity endpoint URL
+export function validateLearnosityEndpoint(endpoint: string): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (!endpoint || typeof endpoint !== "string") {
+    errors.push({
+      field: "endpoint",
+      message: "Learnosity endpoint is required",
+      code: "MISSING_ENDPOINT",
+    });
+  } else if (endpoint.trim() === "") {
+    errors.push({
+      field: "endpoint",
+      message: "Learnosity endpoint cannot be empty",
+      code: "EMPTY_ENDPOINT",
+    });
+  } else if (!VALID_LEARNOSITY_ENDPOINTS.includes(endpoint.trim())) {
+    errors.push({
+      field: "endpoint",
+      message: `Invalid Learnosity endpoint. Must be one of: ${VALID_LEARNOSITY_ENDPOINTS.join(", ")}`,
+      code: "INVALID_ENDPOINT",
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
+// Validate Learnosity expiry time in minutes
+export function validateLearnosityExpiryMinutes(
+  expiresMinutes: number
+): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (typeof expiresMinutes !== "number" || isNaN(expiresMinutes)) {
+    errors.push({
+      field: "expiresMinutes",
+      message: "Expiry time must be a valid number",
+      code: "INVALID_EXPIRY_TYPE",
+    });
+  } else if (expiresMinutes <= 0) {
+    errors.push({
+      field: "expiresMinutes",
+      message: "Expiry time must be greater than 0 minutes",
+      code: "INVALID_EXPIRY_RANGE",
+    });
+  } else if (expiresMinutes > 1440) {
+    // 24 hours max
+    errors.push({
+      field: "expiresMinutes",
+      message: "Expiry time cannot exceed 1440 minutes (24 hours)",
+      code: "EXPIRY_TOO_LONG",
+    });
+  } else if (!Number.isInteger(expiresMinutes)) {
+    errors.push({
+      field: "expiresMinutes",
+      message: "Expiry time must be a whole number of minutes",
+      code: "NON_INTEGER_EXPIRY",
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
+// Validate complete Learnosity configuration
+export function validateLearnosityConfig(config: {
+  endpoint: string;
+  expiresMinutes: number;
+}): ValidationResult {
+  const endpointValidation = validateLearnosityEndpoint(config.endpoint);
+  const expiryValidation = validateLearnosityExpiryMinutes(
+    config.expiresMinutes
+  );
+
+  return combineValidationResults(endpointValidation, expiryValidation);
+}
+
+// Validate Learnosity configuration request body
+export function validateLearnosityConfigRequest(body: any): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (!body || typeof body !== "object") {
+    errors.push({
+      field: "body",
+      message: "Request body is required and must be a valid JSON object",
+      code: "INVALID_REQUEST_BODY",
+    });
+    return {
+      isValid: false,
+      errors,
+    };
+  }
+
+  // Check required fields
+  const requiredFields = ["endpoint", "expiresMinutes"];
+  const requiredFieldsValidation = validateRequiredFields(body, requiredFields);
+
+  if (!requiredFieldsValidation.isValid) {
+    return requiredFieldsValidation;
+  }
+
+  // Validate the configuration data
+  return validateLearnosityConfig({
+    endpoint: body.endpoint,
+    expiresMinutes: body.expiresMinutes,
+  });
+}

@@ -20,6 +20,14 @@ export interface AssessmentResult {
   updatedAt: Date;
 }
 
+export interface LearnosityConfig {
+  id: string;
+  endpoint: string;
+  expiresMinutes: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // API types
 export interface CreateTestSessionRequest {
   studentId: string;
@@ -36,6 +44,19 @@ export interface CreateResultRequest {
   response: any;
   score?: number;
   timeSpent?: number;
+}
+
+export interface CreateLearnosityConfigRequest {
+  endpoint: string;
+  expiresMinutes: number;
+}
+
+export interface LearnosityConfigResponse {
+  success: boolean;
+  data: {
+    config: LearnosityConfig;
+  };
+  timestamp: string;
 }
 
 // Learnosity types

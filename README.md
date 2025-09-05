@@ -15,25 +15,6 @@ A NextJS-based demonstration application for Learnosity's assessment delivery ca
 - **Session Cleanup**: Automatic cleanup of expired sessions and orphaned data
 - **Demo Ready**: Simple, intuitive interface for showcasing Learnosity capabilities
 
-## Architecture
-
-### Learnosity-First Design
-
-This application follows a **Learnosity-first architecture** where:
-
-- **Session Status**: Managed entirely by Learnosity, not stored locally
-- **Single Source of Truth**: Learnosity is the authoritative source for session state
-- **Local Persistence**: Only stores essential metadata (student ID, timestamps, etc.)
-- **Status Queries**: Session status is queried from Learnosity when needed
-- **Simplified Logic**: Reduced complexity by removing local status management
-
-### Key Benefits
-
-- **Consistency**: No sync issues between local and Learnosity status
-- **Reliability**: Learnosity's robust session management handles edge cases
-- **Simplicity**: Cleaner codebase with less status-related logic
-- **Maintainability**: Easier to maintain without complex status synchronization
-
 ## Tech Stack
 
 - **Frontend**: NextJS 15 with React 19 and TypeScript
@@ -111,11 +92,13 @@ This application follows a **Learnosity-first architecture** where:
 ### Health Monitoring
 
 Check the application health by visiting:
+
 - `/api/health/database` - Database connection status and statistics
 
 ### Development Testing
 
 Use the test endpoints for development and debugging:
+
 - `/api/test/database-seeder` - Populate database with test data
 - `/api/test/session-cleanup` - Test session cleanup functionality
 
@@ -197,8 +180,6 @@ src/
 - `NEXT_PUBLIC_APP_URL` - Application URL
 - `SESSION_TIMEOUT_MINUTES` - Session timeout duration
 - `NODE_ENV` - Environment mode
-
-
 
 ## Development
 
@@ -283,7 +264,6 @@ The application includes several testing endpoints for development:
 ### Session Management
 
 - Automatic session creation with unique IDs
-- Resumable sessions with timeout handling
 - Learnosity-managed session status (not stored locally)
 - Progress saving and restoration
 - Automatic cleanup of expired sessions based on timestamps
@@ -294,17 +274,6 @@ The application includes several testing endpoints for development:
 - System status monitoring
 - Database statistics and metrics
 - Error reporting and diagnostics
-
-## Contributing
-
-1. Follow the existing code style (ESLint + Prettier)
-2. Add TypeScript types for new features
-3. Update documentation as needed
-4. Test thoroughly before submitting
-
-## License
-
-This project is for demonstration purposes. Please refer to Learnosity's terms of service for API usage.
 
 ## Troubleshooting
 
@@ -344,9 +313,3 @@ Enable debug logging by setting `NODE_ENV=development` in your environment varia
 - Use `npm run db:studio` to inspect the database visually
 - Check `/api/health/database` for database status
 - Use test endpoints to verify functionality
-
-## Support
-
-For Learnosity API support, visit [learnosity.com/support](https://learnosity.com/support)
-
-For application-specific issues, check the console logs and health endpoints for diagnostic information.

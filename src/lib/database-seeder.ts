@@ -343,7 +343,7 @@ export class DatabaseSeeder {
 
       // Status tracking removed - Learnosity handles status management
       const sessionStatuses: Record<string, number> = {
-        "managed_by_learnosity": sessions,
+        managed_by_learnosity: sessions,
       };
 
       return {
