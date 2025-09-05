@@ -53,6 +53,13 @@ function AssessmentContent() {
         const response = await fetch(`/api/test-sessions/${testSessionId}`);
 
         if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(
+              testSessionId
+                ? "The test session you're trying to resume no longer exists. It may have been completed or removed."
+                : "Test session not found"
+            );
+          }
           throw new Error("Failed to load test session");
         }
 
@@ -60,7 +67,11 @@ function AssessmentContent() {
         const testSessionData: TestSession = data.data; // GET method returns data.data
 
         if (!testSessionData) {
-          throw new Error("No active test session found");
+          throw new Error(
+            testSessionId
+              ? "The test session you're trying to resume is no longer available. It may have been completed or removed."
+              : "No active test session found"
+          );
         }
 
         // Check if session is expired based on expiresAt timestamp
@@ -69,7 +80,14 @@ function AssessmentContent() {
           new Date(testSessionData.expiresAt) < new Date()
         ) {
           throw new Error(
-            "Test session has expired. Please start a new assessment."
+            "The test session you're trying to resume has expired. Please start a new assessment."
+          );
+        }
+
+        // Check if the session belongs to the correct student
+        if (testSessionData.studentId !== studentId) {
+          throw new Error(
+            "You don't have permission to access this test session. Please check your student ID."
           );
         }
 
@@ -124,9 +142,13 @@ function AssessmentContent() {
           <div className="spinner-border text-primary mb-3" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <h5 className="text-muted">Loading Assessment...</h5>
+          <h5 className="text-muted">
+            {testSessionId ? "Resuming Assessment..." : "Loading Assessment..."}
+          </h5>
           <p className="text-muted small">
-            Please wait while we prepare your assessment
+            {testSessionId
+              ? "Please wait while we restore your previous session"
+              : "Please wait while we prepare your assessment"}
           </p>
         </div>
       </div>
@@ -193,6 +215,14 @@ function AssessmentContent() {
                 <small className="text-muted">
                   <i className="bi bi-person-circle me-1"></i>
                   Test Session ID: <code>{testSession.id}</code>
+                  {testSessionId && (
+                    <span className="ms-2">
+                      <i className="bi bi-arrow-clockwise text-primary me-1"></i>
+                      <span className="text-primary fw-semibold">
+                        Resuming Session
+                      </span>
+                    </span>
+                  )}
                 </small>
               </div>
               {learnosityConfig && (

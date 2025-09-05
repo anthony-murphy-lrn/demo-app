@@ -17,7 +17,7 @@ import {
   handleGenericError,
 } from "@/utils/error-handler";
 
-// GET /api/test-sessions - Retrieve test session by student ID
+// GET /api/test-sessions - Retrieve test sessions by student ID with pagination
 export async function GET(request: NextRequest) {
   try {
     // Validate query parameters
@@ -27,35 +27,174 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId")!;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "5");
 
     // Validate student ID format
     const idValidation = validateIdFormat(studentId);
     const idValidationError = handleValidationErrors(idValidation);
     if (idValidationError) return idValidationError;
 
-    // Find the most recent test session for the student
-    const testSession = await prisma.testSession.findFirst({
-      where: {
-        studentId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        results: true,
-      },
+    // Validate pagination parameters
+    if (page < 1 || limit < 1 || limit > 100) {
+      return handleValidationErrors({
+        isValid: false,
+        errors: [
+          {
+            field: "pagination",
+            message:
+              "Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 100.",
+            code: "INVALID_PAGINATION",
+          },
+        ],
+      });
+    }
+
+    // Validate page number is not too large (prevent excessive skip values)
+    if (page > 10000) {
+      return handleValidationErrors({
+        isValid: false,
+        errors: [
+          {
+            field: "page",
+            message: "Page number too large. Maximum page number is 10000.",
+            code: "PAGE_TOO_LARGE",
+          },
+        ],
+      });
+    }
+
+    // Calculate pagination offset
+    const skip = (page - 1) * limit;
+
+    // Early return for invalid pagination scenarios
+    if (skip < 0) {
+      return handleValidationErrors({
+        isValid: false,
+        errors: [
+          {
+            field: "pagination",
+            message: "Invalid pagination offset calculated.",
+            code: "INVALID_OFFSET",
+          },
+        ],
+      });
+    }
+
+    // Use transaction for better performance and consistency
+    // Note: For optimal performance, ensure database has index on (studentId, createdAt)
+    let totalSessions: number;
+    let testSessions: any[];
+
+    try {
+      [totalSessions, testSessions] = await prisma.$transaction([
+        // Get total count of sessions for the student
+        // Using count with where clause for efficiency
+        prisma.testSession.count({
+          where: {
+            studentId,
+          },
+        }),
+        // Find test sessions for the student with pagination
+        // Using efficient ordering by createdAt DESC for most recent first
+        // Only select necessary fields to reduce data transfer
+        prisma.testSession.findMany({
+          where: {
+            studentId,
+          },
+          select: {
+            id: true,
+            studentId: true,
+            assessmentId: true,
+            learnositySessionId: true,
+            createdAt: true,
+            expiresAt: true,
+            // Only include results if needed (can be optimized further)
+            results: {
+              select: {
+                id: true,
+                score: true,
+                createdAt: true,
+              },
+            },
+          },
+          orderBy: [
+            { createdAt: "desc" },
+            { id: "desc" }, // Secondary sort for consistent ordering
+          ],
+          skip,
+          take: limit,
+        }),
+      ]);
+    } catch (dbError) {
+      console.error("Database transaction failed:", dbError);
+      return handleGenericError(dbError, "Database Query");
+    }
+
+    // Validate transaction results
+    if (typeof totalSessions !== "number" || !Array.isArray(testSessions)) {
+      return handleGenericError(
+        new Error("Invalid database response format"),
+        "Data Validation"
+      );
+    }
+
+    // Calculate session status and add to response
+    const now = new Date();
+    const sessionsWithStatus = testSessions.map(session => ({
+      ...session,
+      status:
+        session.expiresAt && session.expiresAt < now ? "expired" : "active",
+    }));
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalSessions / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    // Handle edge case: requested page is beyond available data
+    if (totalSessions > 0 && page > totalPages) {
+      return handleValidationErrors({
+        isValid: false,
+        errors: [
+          {
+            field: "page",
+            message: `Page ${page} does not exist. Maximum page is ${totalPages}.`,
+            code: "PAGE_NOT_FOUND",
+          },
+        ],
+      });
+    }
+
+    const paginationInfo = {
+      currentPage: page,
+      totalPages,
+      totalSessions,
+      hasNextPage,
+      hasPreviousPage,
+      limit,
+      startIndex: skip + 1,
+      endIndex: Math.min(skip + limit, totalSessions),
+      isEmpty: totalSessions === 0,
+    };
+
+    const response = createSuccessResponse({
+      sessions: sessionsWithStatus,
+      pagination: paginationInfo,
     });
 
-    if (!testSession) {
-      return handleNotFoundError("Test Session");
-    }
+    // Add caching headers for better performance
+    // Cache for 30 seconds for frequently accessed data
+    response.headers.set(
+      "Cache-Control",
+      "private, max-age=30, stale-while-revalidate=60"
+    );
+    response.headers.set(
+      "ETag",
+      `"${studentId}-${page}-${limit}-${totalSessions}"`
+    );
 
-    // Check if test session has expired
-    if (testSession.expiresAt && testSession.expiresAt < new Date()) {
-      return handleNotFoundError("Test Session");
-    }
-
-    return createSuccessResponse(testSession);
+    return response;
   } catch (error) {
     return handleGenericError(error, "Test Session Retrieval");
   }

@@ -4,13 +4,27 @@ import { useState } from "react";
 
 interface LandingPageProps {
   onStartAssessment: (studentId: string) => void;
+  onStudentIdEntered?: (studentId: string) => void;
 }
 
-export default function LandingPage({ onStartAssessment }: LandingPageProps) {
+export default function LandingPage({
+  onStartAssessment,
+  onStudentIdEntered,
+}: LandingPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [studentId, setStudentId] = useState("");
   // const _router = useRouter();
+
+  const handleStudentIdChange = (newStudentId: string) => {
+    setStudentId(newStudentId);
+    setError(null); // Clear any previous errors
+
+    // Trigger session lookup when student ID is entered
+    if (newStudentId.trim() && onStudentIdEntered) {
+      onStudentIdEntered(newStudentId.trim());
+    }
+  };
 
   const handleStartAssessment = async () => {
     if (!studentId.trim()) {
@@ -49,7 +63,7 @@ export default function LandingPage({ onStartAssessment }: LandingPageProps) {
                   id="studentId"
                   placeholder="Enter your Student ID (e.g., student123)"
                   value={studentId}
-                  onChange={e => setStudentId(e.target.value)}
+                  onChange={e => handleStudentIdChange(e.target.value)}
                   disabled={isLoading}
                   required
                 />

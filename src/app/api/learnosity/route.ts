@@ -12,7 +12,6 @@ import {
   createSuccessResponse,
   createErrorResponse,
   handleValidationErrors,
-  handleNotFoundError,
   handleGenericError,
 } from "@/utils/error-handler";
 
@@ -60,12 +59,42 @@ export async function POST(request: NextRequest) {
     });
 
     if (!testSession) {
-      return handleNotFoundError("Test Session");
+      return createErrorResponse(
+        "The test session you're trying to resume no longer exists. It may have been completed or removed.",
+        STATUS_CODES.NOT_FOUND,
+        undefined,
+        "TEST_SESSION_NOT_FOUND"
+      );
     }
 
     // Check if test session has expired
     if (testSession.expiresAt && testSession.expiresAt < new Date()) {
-      return handleNotFoundError("Test Session");
+      return createErrorResponse(
+        "The test session you're trying to resume has expired. Please start a new assessment.",
+        STATUS_CODES.GONE,
+        undefined,
+        "TEST_SESSION_EXPIRED"
+      );
+    }
+
+    // Check if the session belongs to the correct student
+    if (testSession.studentId !== body.studentId) {
+      return createErrorResponse(
+        "You don't have permission to access this test session. Please check your student ID.",
+        STATUS_CODES.FORBIDDEN,
+        undefined,
+        "TEST_SESSION_ACCESS_DENIED"
+      );
+    }
+
+    // Check if the session has a valid Learnosity session ID
+    if (!testSession.learnositySessionId) {
+      return createErrorResponse(
+        "The test session is missing Learnosity session data. Please start a new assessment.",
+        STATUS_CODES.UNPROCESSABLE_ENTITY,
+        undefined,
+        "MISSING_LEARNOSITY_SESSION_ID"
+      );
     }
 
     try {
