@@ -61,7 +61,7 @@ export class LearnosityService {
   generateSecurityConfig(sessionId: string): Record<string, any> {
     try {
       const expiresAt = new Date(
-        Date.now() + testSessionConfig.learnosityExpiresMinutes * 60 * 1000
+        Date.now() + this.expiresMinutes * 60 * 1000
       ).toISOString();
 
       // Use the SDK to generate a security request
@@ -69,7 +69,7 @@ export class LearnosityService {
         "security", // API type
         {
           consumer_key: this.consumerKey,
-          domain: this.domain,
+          domain: learnosityConfig.domain, // Use the original domain for security, not the endpoint
         },
         this.consumerSecret, // Consumer secret
         {
@@ -181,7 +181,7 @@ export class LearnosityService {
         "items", // API type
         {
           consumer_key: this.consumerKey,
-          domain: this.domain,
+          domain: learnosityConfig.domain, // Use the original domain for security, not the endpoint
           expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
