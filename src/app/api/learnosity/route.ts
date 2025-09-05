@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
 
       return createSuccessResponse({
         learnosity: {
-          domain: learnosityService.getDomain(),
+          domain: learnosityService.getDomain(), // localhost for security signatures
+          apiEndpoint: learnosityService.getApiEndpoint(), // items-ie.learnosity.com for API calls
           itemsRequest: itemsRequest,
           securityConfig: securityConfig,
         },

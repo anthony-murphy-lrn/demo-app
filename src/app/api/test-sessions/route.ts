@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
     };
 
     const response = createSuccessResponse({
-      sessions: sessionsWithStatus,
+      testSessions: sessionsWithStatus,
       pagination: paginationInfo,
     });
 

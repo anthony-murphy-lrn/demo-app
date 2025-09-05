@@ -213,7 +213,7 @@ export function combineValidationResults(
 // Valid Learnosity Items API endpoints
 const VALID_LEARNOSITY_ENDPOINTS = [
   "items-va.learnosity.com",
-  "items-eu.learnosity.com",
+  "items-ie.learnosity.com",
   "items-au.learnosity.com",
 ];
 

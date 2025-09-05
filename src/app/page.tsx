@@ -56,9 +56,14 @@ export default function Home() {
     console.error("Configuration error:", error);
   };
 
-  const handleStudentIdEntered = (enteredStudentId: string) => {
+  const handleFindTestAttempts = (enteredStudentId: string) => {
     setStudentId(enteredStudentId);
     setShowSessionManagement(true);
+  };
+
+  const handleBackToHome = () => {
+    setShowSessionManagement(false);
+    setStudentId("");
   };
 
   return (
@@ -76,11 +81,12 @@ export default function Home() {
           <TestSessionManagement
             studentId={studentId}
             onStartNewTest={handleStartAssessment}
+            onBackToHome={handleBackToHome}
           />
         ) : (
           <LandingPage
             onStartAssessment={handleStartAssessment}
-            onStudentIdEntered={handleStudentIdEntered}
+            onFindTestAttempts={handleFindTestAttempts}
           />
         )}
       </main>

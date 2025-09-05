@@ -7,14 +7,16 @@ import { LearnositySessionConfig, LearnosityResponse } from "@/types";
 export class LearnosityService {
   private consumerKey: string;
   private consumerSecret: string;
-  private domain: string;
+  private securityDomain: string; // For security signatures (localhost)
+  private apiEndpoint: string; // For API calls (items-ie.learnosity.com, etc.)
   private expiresMinutes: number;
   private learnosity: any;
 
   constructor(customConfig?: { domain?: string; expiresMinutes?: number }) {
     this.consumerKey = learnosityConfig.consumerKey;
     this.consumerSecret = learnosityConfig.consumerSecret;
-    this.domain = customConfig?.domain || learnosityConfig.domain;
+    this.securityDomain = "localhost"; // Always use localhost for security signatures
+    this.apiEndpoint = customConfig?.domain || learnosityConfig.domain; // Use configured endpoint for API calls
     this.expiresMinutes =
       customConfig?.expiresMinutes ||
       testSessionConfig.learnosityExpiresMinutes;
@@ -35,7 +37,7 @@ export class LearnosityService {
         "items", // API type
         {
           consumer_key: this.consumerKey,
-          domain: this.domain,
+          domain: this.securityDomain, // Use localhost for security signatures
         },
         this.consumerSecret, // Consumer secret
         {
@@ -69,7 +71,7 @@ export class LearnosityService {
         "security", // API type
         {
           consumer_key: this.consumerKey,
-          domain: learnosityConfig.domain, // Use the original domain for security, not the endpoint
+          domain: this.securityDomain, // Use localhost for security signatures
         },
         this.consumerSecret, // Consumer secret
         {
@@ -114,7 +116,7 @@ export class LearnosityService {
         "items", // API type
         {
           consumer_key: this.consumerKey,
-          domain: this.domain,
+          domain: this.securityDomain,
           expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
@@ -181,7 +183,7 @@ export class LearnosityService {
         "items", // API type
         {
           consumer_key: this.consumerKey,
-          domain: learnosityConfig.domain, // Use the original domain for security, not the endpoint
+          domain: this.securityDomain, // Use localhost for security signatures
           expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
@@ -252,7 +254,7 @@ export class LearnosityService {
         "data", // API type
         {
           consumer_key: this.consumerKey,
-          domain: this.domain,
+          domain: this.securityDomain,
           expires: expiresFormatted, // Add expires parameter to security object
         },
         this.consumerSecret, // Consumer secret
@@ -290,16 +292,21 @@ export class LearnosityService {
     return !!(
       this.consumerKey &&
       this.consumerSecret &&
-      this.domain &&
+      this.apiEndpoint &&
       this.consumerKey !== "your_consumer_key_here" &&
       this.consumerSecret !== "your_consumer_secret_here" &&
-      this.domain !== "your_domain_here"
+      this.apiEndpoint !== "your_domain_here"
     );
   }
 
-  // Get Learnosity domain for client-side integration
+  // Get Learnosity domain for client-side integration (security signatures)
   getDomain(): string {
-    return this.domain;
+    return this.securityDomain;
+  }
+
+  // Get Learnosity API endpoint for actual API calls
+  getApiEndpoint(): string {
+    return this.apiEndpoint;
   }
 
   // Get SDK instance for advanced usage

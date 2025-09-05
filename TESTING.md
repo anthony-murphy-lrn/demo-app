@@ -98,3 +98,4 @@ Current coverage targets are set to 20% for this demo project. The coverage repo
 - Line coverage
 
 To view detailed coverage, run `npm run test:coverage` and check the generated HTML report in the `coverage/` directory.
+

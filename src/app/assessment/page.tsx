@@ -108,12 +108,20 @@ function AssessmentContent() {
     loadTestSession();
   }, [studentId, testSessionId]);
 
-  // Format expiry time for display
-  const formatExpiryTime = (minutes: number): string => {
-    const now = new Date();
-    const expiry = new Date(now.getTime() + minutes * 60 * 1000);
-    // Use a consistent format that doesn't depend on locale
-    return expiry.toISOString().replace("T", " ").slice(0, 19);
+  // Format expiry time for display using the stored expiresAt from database
+  const formatExpiryTime = (expiresAt: Date | string | null): string => {
+    if (!expiresAt) return "No expiration";
+    const dateObj = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
+    // Use a consistent format that doesn't depend on locale - same as session management table
+    return dateObj.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
   };
 
   const handleAssessmentComplete = async (results: any) => {
@@ -212,18 +220,19 @@ function AssessmentContent() {
           <div className="container">
             <div className="row align-items-center">
               <div className="col-md-6">
-                <small className="text-muted">
-                  <i className="bi bi-person-circle me-1"></i>
-                  Test Session ID: <code>{testSession.id}</code>
-                  {testSessionId && (
-                    <span className="ms-2">
-                      <i className="bi bi-arrow-clockwise text-primary me-1"></i>
-                      <span className="text-primary fw-semibold">
-                        Resuming Session
-                      </span>
-                    </span>
-                  )}
-                </small>
+                <div className="d-flex align-items-center gap-3">
+                  <button
+                    onClick={() => router.push("/")}
+                    className="btn btn-outline-secondary btn-sm"
+                    title="Back to Home"
+                  >
+                    <i className="bi bi-house"></i>
+                  </button>
+                  <small className="text-muted">
+                    <i className="bi bi-person-circle me-1"></i>
+                    Test Session ID: <code>{testSession.id}</code>
+                  </small>
+                </div>
               </div>
               {learnosityConfig && (
                 <div className="col-md-6 text-md-end">
@@ -234,7 +243,7 @@ function AssessmentContent() {
                     <i className="bi bi-clock me-1"></i>
                     Expires:{" "}
                     <code>
-                      {formatExpiryTime(learnosityConfig.expiresMinutes)}
+                      {formatExpiryTime(testSession?.expiresAt ?? null)}
                     </code>
                   </small>
                 </div>

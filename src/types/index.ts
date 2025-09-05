@@ -86,6 +86,7 @@ export interface LearnosityResponse {
   data: {
     learnosity: {
       domain: string;
+      apiEndpoint: string;
       itemsRequest: any;
       securityConfig: any;
     };
@@ -118,7 +119,7 @@ export interface PaginationInfo {
 }
 
 export interface SessionsResponse {
-  sessions: SessionWithStatus[];
+  testSessions: SessionWithStatus[];
   pagination: PaginationInfo;
 }
 

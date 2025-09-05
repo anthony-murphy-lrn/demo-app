@@ -74,14 +74,21 @@ export default function TestSessionManagement({
           );
         }
 
-        const data: SessionsResponse = await response.json();
+        const responseData = await response.json();
 
-        // Validate response data
-        if (!data.sessions || !data.pagination) {
+        // Validate response structure
+        if (!responseData.success || !responseData.data) {
           throw new Error("Invalid response format from server");
         }
 
-        setSessions(data.sessions);
+        const data: SessionsResponse = responseData.data;
+
+        // Validate response data
+        if (!data.testSessions || !data.pagination) {
+          throw new Error("Invalid response format from server");
+        }
+
+        setSessions(data.testSessions);
         setPagination(data.pagination);
         setRetryCount(0); // Reset retry count on success
       } catch (err) {
@@ -182,7 +189,16 @@ export default function TestSessionManagement({
   }, [fetchSessions]);
 
   const formatDateTime = (date: Date | string) => {
-    return new Date(date).toLocaleString();
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -605,16 +621,6 @@ export default function TestSessionManagement({
             </div>
           )}
 
-          {/* Start New Test Button - Below Table */}
-          <div className="text-center mt-3 mt-md-4">
-            <button
-              className="btn btn-primary btn-lg w-100 w-md-auto"
-              onClick={() => onStartNewTest(studentId)}
-            >
-              <i className="bi bi-plus-circle me-2"></i>
-              Start New Test
-            </button>
-          </div>
         </div>
       </div>
     </div>

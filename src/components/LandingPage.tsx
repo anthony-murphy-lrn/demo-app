@@ -4,12 +4,12 @@ import { useState } from "react";
 
 interface LandingPageProps {
   onStartAssessment: (studentId: string) => void;
-  onStudentIdEntered?: (studentId: string) => void;
+  onFindTestAttempts: (studentId: string) => void;
 }
 
 export default function LandingPage({
   onStartAssessment,
-  onStudentIdEntered,
+  onFindTestAttempts,
 }: LandingPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,16 +19,31 @@ export default function LandingPage({
   const handleStudentIdChange = (newStudentId: string) => {
     setStudentId(newStudentId);
     setError(null); // Clear any previous errors
+  };
 
-    // Trigger session lookup when student ID is entered
-    if (newStudentId.trim() && onStudentIdEntered) {
-      onStudentIdEntered(newStudentId.trim());
+  const handleFindTestAttempts = () => {
+    if (!studentId.trim()) {
+      setError("Please enter your Student ID to find test attempts.");
+      return;
     }
+
+    if (studentId.trim().length < 3) {
+      setError("Student ID must be at least 3 characters long.");
+      return;
+    }
+
+    setError(null);
+    onFindTestAttempts(studentId.trim());
   };
 
   const handleStartAssessment = async () => {
     if (!studentId.trim()) {
       setError("Please enter your Student ID to continue.");
+      return;
+    }
+
+    if (studentId.trim().length < 3) {
+      setError("Student ID must be at least 3 characters long.");
       return;
     }
 
@@ -80,8 +95,17 @@ export default function LandingPage({
                 </div>
               )}
 
-              {/* Start Button */}
-              <div className="d-grid">
+              {/* Action Buttons */}
+              <div className="d-grid gap-2">
+                <button
+                  className="btn btn-outline-primary btn-lg"
+                  onClick={handleFindTestAttempts}
+                  disabled={isLoading}
+                >
+                  <i className="bi bi-search me-2"></i>
+                  Find Test Attempts
+                </button>
+                
                 <button
                   className={`btn btn-primary btn-lg ${
                     isLoading ? "disabled" : ""
@@ -101,7 +125,7 @@ export default function LandingPage({
                   ) : (
                     <>
                       <i className="bi bi-play-fill me-2"></i>
-                      Start Assessment
+                      Start New Test
                     </>
                   )}
                 </button>

@@ -14,8 +14,8 @@ const LEARNOSITY_ENDPOINTS = [
     label: "US East (items-va.learnosity.com)",
   },
   {
-    value: "items-eu.learnosity.com",
-    label: "Europe (items-eu.learnosity.com)",
+    value: "items-ie.learnosity.com",
+    label: "Europe (items-ie.learnosity.com)",
   },
   {
     value: "items-au.learnosity.com",

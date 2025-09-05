@@ -21,17 +21,20 @@ describe('TestSessionManagement Component', () => {
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({
-        sessions: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalSessions: 0,
-          hasNextPage: false,
-          hasPreviousPage: false,
-          limit: 5,
-          startIndex: 0,
-          endIndex: 0,
-          isEmpty: true,
+        success: true,
+        data: {
+          testSessions: [],
+          pagination: {
+            currentPage: 1,
+            totalPages: 1,
+            totalSessions: 0,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            limit: 5,
+            startIndex: 0,
+            endIndex: 0,
+            isEmpty: true,
+          },
         },
       }),
     })
@@ -120,17 +123,20 @@ describe('TestSessionManagement Component', () => {
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({
-        sessions: mockSessions,
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalSessions: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
-          limit: 5,
-          startIndex: 1,
-          endIndex: 1,
-          isEmpty: false,
+        success: true,
+        data: {
+          testSessions: mockSessions,
+          pagination: {
+            currentPage: 1,
+            totalPages: 1,
+            totalSessions: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            limit: 5,
+            startIndex: 1,
+            endIndex: 1,
+            isEmpty: false,
+          },
         },
       }),
     })

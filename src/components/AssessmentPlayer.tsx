@@ -78,7 +78,7 @@ export default function AssessmentPlayer({
 
         // Load Learnosity Items API script if not already loaded
         if (!window.LearnosityItems) {
-          await loadLearnosityScript();
+          await loadLearnosityScript(learnosityConfig.apiEndpoint);
         }
 
         // Wait for the container to be available before initializing
@@ -112,7 +112,7 @@ export default function AssessmentPlayer({
   }, [sessionId, studentId, onError]);
 
   // Load Learnosity Items API script
-  const loadLearnosityScript = (): Promise<void> => {
+  const loadLearnosityScript = (apiEndpoint: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (window.LearnosityItems) {
         resolve();
@@ -120,7 +120,7 @@ export default function AssessmentPlayer({
       }
 
       const script = document.createElement("script");
-      script.src = "//items-ie.learnosity.com/?latest-lts";
+      script.src = `//${apiEndpoint}/?latest-lts`;
       script.async = true;
       script.onload = () => {
         resolve();
