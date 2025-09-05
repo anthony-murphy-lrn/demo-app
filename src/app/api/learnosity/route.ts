@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
-import { learnosityService } from "@/lib/learnosity";
+import { LearnosityService } from "@/lib/learnosity";
 import { learnosityConfig } from "@/lib/config";
 import { STATUS_CODES } from "@/constants";
 import {
@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
     const combinedValidation = combineValidationResults(...validations);
     const combinedValidationError = handleValidationErrors(combinedValidation);
     if (combinedValidationError) return combinedValidationError;
+
+    // Create LearnosityService with current configuration
+    const learnosityService = await LearnosityService.createWithCurrentConfig();
 
     // Check if Learnosity is configured
     if (!learnosityService.isConfigured()) {

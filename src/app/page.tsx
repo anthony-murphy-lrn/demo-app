@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LandingPage from "@/components/LandingPage";
 import TestSessionResumption from "@/components/TestSessionResumption";
+import LearnosityConfigForm from "@/components/LearnosityConfigForm";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { TestSession } from "@/types";
+import { TestSession, LearnosityConfig } from "@/types";
 
 export default function Home() {
   const [, setCurrentTestSession] = useState<TestSession | null>(null);
   const [studentId, setStudentId] = useState<string>("");
+  const [, setLearnosityConfig] = useState<LearnosityConfig | null>(null);
   const router = useRouter();
 
   const handleStartAssessment = async (newStudentId: string): Promise<void> => {
@@ -48,9 +50,25 @@ export default function Home() {
     setCurrentTestSession(testSession);
   };
 
+  const handleConfigChange = (config: LearnosityConfig) => {
+    setLearnosityConfig(config);
+  };
+
+  const handleConfigError = (error: string) => {
+    console.error("Configuration error:", error);
+  };
+
   return (
     <ErrorBoundary>
       <main>
+        {/* Learnosity Configuration Form */}
+        <div className="container-fluid py-4">
+          <LearnosityConfigForm
+            onConfigChange={handleConfigChange}
+            onError={handleConfigError}
+          />
+        </div>
+
         {studentId && (
           <TestSessionResumption
             studentId={studentId}

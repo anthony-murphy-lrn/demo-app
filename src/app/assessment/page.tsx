@@ -1,21 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AssessmentPlayer from "@/components/AssessmentPlayer";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { TestSession } from "@/types";
+import { TestSession, LearnosityConfig } from "@/types";
 
-export default function AssessmentPage() {
+function AssessmentContent() {
   const [testSession, setTestSession] = useState<TestSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [learnosityConfig, setLearnosityConfig] =
+    useState<LearnosityConfig | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Get test session ID and student ID from URL params
   const testSessionId = searchParams.get("testSessionId");
   const studentId = searchParams.get("studentId");
+
+  // Load Learnosity configuration
+  const loadLearnosityConfig = async () => {
+    try {
+      const response = await fetch("/api/learnosity-config");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.config) {
+          setLearnosityConfig(data.data.config);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading Learnosity configuration:", err);
+    }
+  };
 
   useEffect(() => {
     const loadTestSession = async () => {
@@ -57,6 +74,9 @@ export default function AssessmentPage() {
         }
 
         setTestSession(testSessionData);
+
+        // Load Learnosity configuration
+        await loadLearnosityConfig();
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load assessment";
@@ -69,6 +89,13 @@ export default function AssessmentPage() {
 
     loadTestSession();
   }, [studentId, testSessionId]);
+
+  // Format expiry time for display
+  const formatExpiryTime = (minutes: number): string => {
+    const now = new Date();
+    const expiry = new Date(now.getTime() + minutes * 60 * 1000);
+    return expiry.toLocaleString();
+  };
 
   const handleAssessmentComplete = async (results: any) => {
     try {
@@ -160,10 +187,27 @@ export default function AssessmentPage() {
         {/* Test Session Info Header */}
         <div className="bg-white border-bottom py-2">
           <div className="container">
-            <div className="d-flex align-items-center">
-              <small className="text-muted">
-                Test Session ID: {testSession.id}
-              </small>
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <small className="text-muted">
+                  <i className="bi bi-person-circle me-1"></i>
+                  Test Session ID: <code>{testSession.id}</code>
+                </small>
+              </div>
+              {learnosityConfig && (
+                <div className="col-md-6 text-md-end">
+                  <small className="text-muted">
+                    <i className="bi bi-gear me-1"></i>
+                    Learnosity: <code>{learnosityConfig.endpoint}</code>
+                    <br />
+                    <i className="bi bi-clock me-1"></i>
+                    Expires:{" "}
+                    <code>
+                      {formatExpiryTime(learnosityConfig.expiresMinutes)}
+                    </code>
+                  </small>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -177,5 +221,13 @@ export default function AssessmentPage() {
         />
       </div>
     </ErrorBoundary>
+  );
+}
+
+export default function AssessmentPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AssessmentContent />
+    </Suspense>
   );
 }

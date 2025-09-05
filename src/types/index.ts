@@ -37,6 +37,7 @@ export interface CreateTestSessionRequest {
 export interface UpdateTestSessionRequest {
   // No fields currently supported for updates
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  [key: string]: never;
 }
 
 export interface CreateResultRequest {

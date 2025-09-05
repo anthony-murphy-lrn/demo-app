@@ -1,5 +1,6 @@
 import Learnosity from "learnosity-sdk-nodejs";
 import { learnosityConfig, testSessionConfig } from "./config";
+import { learnosityConfigService } from "./learnosity-config-service";
 import { LearnositySessionConfig, LearnosityResponse } from "@/types";
 
 // Learnosity API integration utilities using official SDK
@@ -7,12 +8,16 @@ export class LearnosityService {
   private consumerKey: string;
   private consumerSecret: string;
   private domain: string;
+  private expiresMinutes: number;
   private learnosity: any;
 
-  constructor() {
+  constructor(customConfig?: { domain?: string; expiresMinutes?: number }) {
     this.consumerKey = learnosityConfig.consumerKey;
     this.consumerSecret = learnosityConfig.consumerSecret;
-    this.domain = learnosityConfig.domain;
+    this.domain = customConfig?.domain || learnosityConfig.domain;
+    this.expiresMinutes =
+      customConfig?.expiresMinutes ||
+      testSessionConfig.learnosityExpiresMinutes;
 
     // Initialize Learnosity SDK
     this.learnosity = new Learnosity();
@@ -272,9 +277,7 @@ export class LearnosityService {
 
   // Helper method to format expires time in Learnosity format (YYYYMMDD-HHMM)
   private formatExpiresTime(): string {
-    const expiresDate = new Date(
-      Date.now() + testSessionConfig.learnosityExpiresMinutes * 60 * 1000
-    );
+    const expiresDate = new Date(Date.now() + this.expiresMinutes * 60 * 1000);
     return expiresDate
       .toISOString()
       .slice(0, 16)
@@ -302,6 +305,25 @@ export class LearnosityService {
   // Get SDK instance for advanced usage
   getSDK(): any {
     return this.learnosity;
+  }
+
+  // Static method to create LearnosityService with current configuration
+  static async createWithCurrentConfig(): Promise<LearnosityService> {
+    try {
+      const effectiveConfig =
+        await learnosityConfigService.getEffectiveConfig();
+      return new LearnosityService({
+        domain: effectiveConfig.endpoint,
+        expiresMinutes: effectiveConfig.expiresMinutes,
+      });
+    } catch (error) {
+      console.error(
+        "Error loading Learnosity configuration, using defaults:",
+        error
+      );
+      // Fallback to default configuration
+      return new LearnosityService();
+    }
   }
 }
 

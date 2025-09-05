@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/database";
+import { learnosityConfigService } from "@/lib/learnosity-config-service";
 import { STATUS_CODES, SUCCESS_MESSAGES } from "@/constants";
 import { CreateTestSessionRequest } from "@/types";
 import {
@@ -106,16 +107,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get Learnosity configuration for expiry time
+    const effectiveConfig = await learnosityConfigService.getEffectiveConfig();
+
     // Generate Learnosity session ID
     const learnositySessionId = generateLearnositySessionId();
 
-    // Create new test session
+    // Create new test session with Learnosity configuration expiry time
     const testSession = await prisma.testSession.create({
       data: {
         studentId: body.studentId,
         assessmentId: body.assessmentId,
         learnositySessionId: learnositySessionId,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
+        expiresAt: new Date(
+          Date.now() + effectiveConfig.expiresMinutes * 60 * 1000
+        ),
       },
       include: {
         results: true,
