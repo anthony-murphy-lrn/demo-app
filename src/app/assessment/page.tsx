@@ -94,7 +94,8 @@ function AssessmentContent() {
   const formatExpiryTime = (minutes: number): string => {
     const now = new Date();
     const expiry = new Date(now.getTime() + minutes * 60 * 1000);
-    return expiry.toLocaleString();
+    // Use a consistent format that doesn't depend on locale
+    return expiry.toISOString().replace("T", " ").slice(0, 19);
   };
 
   const handleAssessmentComplete = async (results: any) => {
