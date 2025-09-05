@@ -93,16 +93,15 @@ describe('session-utils', () => {
 
   describe('calculateTimeRemaining', () => {
     it('should calculate time remaining correctly', () => {
-      const futureDate = new Date()
-      futureDate.setHours(futureDate.getHours() + 2)
-      futureDate.setMinutes(futureDate.getMinutes() + 30)
+      const now = new Date()
+      const futureDate = new Date(now.getTime() + (2 * 60 + 30) * 60 * 1000) // 2h 30m from now
 
       const session = {
         id: '1',
         studentId: 'student-1',
         assessmentId: 'assessment-1',
         learnositySessionId: 'learnosity-1',
-        createdAt: new Date(),
+        createdAt: now,
         expiresAt: futureDate,
         results: [],
       }
