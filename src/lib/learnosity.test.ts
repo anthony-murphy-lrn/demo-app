@@ -28,7 +28,7 @@ jest.mock('./config', () => ({
     activityId: 'test-activity-id',
   },
   testSessionConfig: {
-    learnosityExpiresMinutes: 30,
+    learnosityExpiresMinutes: 15,
   },
 }))
 

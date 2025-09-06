@@ -42,7 +42,7 @@ export default function LearnosityConfigForm({
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<CreateLearnosityConfigRequest>({
     endpoint: "",
-    expiresMinutes: 30,
+    expiresMinutes: 15,
   });
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>

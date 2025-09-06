@@ -29,7 +29,7 @@ const envSchema = z.object({
   CLEANUP_INTERVAL_MINUTES: z.string().transform(Number).default(30),
 
   // Learnosity Configuration
-  LEARNOSITY_EXPIRES_MINUTES: z.string().transform(Number).default(30),
+  LEARNOSITY_EXPIRES_MINUTES: z.string().transform(Number).default(15),
 });
 
 // Parse and validate environment variables
