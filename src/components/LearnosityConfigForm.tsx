@@ -24,6 +24,7 @@ const LEARNOSITY_ENDPOINTS = [
 ];
 
 const EXPIRY_OPTIONS = [
+  { value: 5, label: "5 minutes" },
   { value: 15, label: "15 minutes" },
   { value: 30, label: "30 minutes" },
   { value: 60, label: "1 hour" },
